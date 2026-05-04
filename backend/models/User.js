@@ -18,12 +18,24 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: true,
+      required: function () {
+        return this.authProvider === "local";
+      },
     },
+
     role: {
       type: String,
       enum: ["buyer", "seller"],
       required: true,
+    },
+    authProvider: {
+      type: String,
+      enum: ["local", "firebase"],
+      default: "local",
+    },
+
+    firebaseUid: {
+      type: String,
     },
   },
 

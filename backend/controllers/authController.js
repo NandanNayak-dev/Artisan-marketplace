@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const admin = require("../config/firebaseAdmin");
 
 const User = require("../models/User");
 
@@ -33,16 +34,16 @@ const signUp = async (req, res) => {
         email: user.email,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "1h" },
     );
 
     // Return the token and user info
-    res.cookie("token", token, { 
-            secure:false,
-            sameSite:"strict",
-            maxAge: 7*24*60*60*1000 ,//7 days
-            httpOnly:true  
-        });
+    res.cookie("token", token, {
+      secure: false,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, //7 days
+      httpOnly: true,
+    });
 
     return res.status(201).json({
       message: "User created successfully",
@@ -58,11 +59,13 @@ const signUp = async (req, res) => {
   }
 };
 
-const signIn=async(req,res)=>{
-  try{
+const signIn = async (req, res) => {
+  try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
     }
     const user = await User.findOne({ email });
 
@@ -84,16 +87,16 @@ const signIn=async(req,res)=>{
       process.env.JWT_SECRET,
       {
         expiresIn: "7d",
-      }
+      },
     );
     // Return the token and user info
     res.cookie("token", token, {
-      secure:false,
-      sameSite:"strict",
-      maxAge: 7*24*60*60*1000 ,//7 days
-      httpOnly:true  
+      secure: false,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, //7 days
+      httpOnly: true,
     });
-    
+
     return res.status(200).json({
       message: "Login successful",
       user: {
@@ -103,11 +106,138 @@ const signIn=async(req,res)=>{
         role: user.role,
       },
     });
-  }
-
-  catch(error){
+  } catch (error) {
     return res.status(500).json({ message: "Login failed" });
   }
-}
+};
 
-module.exports = { signUp, signIn };
+const firebaseGoogleAuth = async (req, res) => {
+  try {
+    const { idToken, role } = req.body;
+
+    if (!idToken) {
+      return res.status(400).json({ message: "Firebase token is required" });
+    }
+
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+
+    const { uid, email, name } = decodedToken;
+
+    if (!email) {
+      return res
+        .status(400)
+        .json({ message: "Google account email is required" });
+    }
+
+    let user = await User.findOne({ email });
+
+    if (user) {
+      return res.status(400).json({
+        message: "You are already a user. Please sign in.",
+      });
+    }
+
+    if (!role || !["buyer", "seller"].includes(role)) {
+      return res.status(400).json({ message: "Role is required for signup" });
+    }
+
+    user = await User.create({
+      fullName: name || email,
+      email,
+      role,
+      authProvider: "firebase",
+      firebaseUid: uid,
+    });
+
+    const token = jwt.sign(
+      {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      },
+    );
+
+    res.cookie("token", token, {
+      secure: false,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+    });
+
+    return res.status(200).json({
+      message: "Google authentication successful",
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Google authentication failed" });
+  }
+};
+
+const firebaseGoogleSignIn = async (req, res) => {
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return res.status(400).json({ message: "Firebase token is required" });
+    }
+
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+
+    const { email } = decodedToken;
+
+    if (!email) {
+      return res.status(400).json({ message: "Google account email is required" });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "No account found. Please signup first.",
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    res.cookie("token", token, {
+      secure: false,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+    });
+
+    return res.status(200).json({
+      message: "Google signin successful",
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Google signin failed" });
+  }
+};
+
+
+module.exports = { signUp, signIn, firebaseGoogleAuth, firebaseGoogleSignIn };
