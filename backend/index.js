@@ -10,7 +10,10 @@ const app = express();
 app.use(express.json());
 const PORT = process.env.PORT || 5000;
 // Allow requests from your frontend dev server (Vite default port 5173)
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true,
+}));
 
 //Routes--------------------------------
 app.use('/api/auth', authRoutes);

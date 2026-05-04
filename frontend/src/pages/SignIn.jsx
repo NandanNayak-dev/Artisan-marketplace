@@ -1,24 +1,67 @@
 import React from 'react'
-
+import { useState } from 'react'
+import axios from 'axios';
 function SignIn() {
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  })
+
+    const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+   const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const res = await axios.post(
+        "http://localhost:8000/api/auth/signin",
+        formData,
+        {
+          withCredentials: true,
+        }
+      );
+
+      console.log(res.data);
+      alert("Login successful");
+    } catch (error) {
+      console.log(error);
+      alert(error.response?.data?.message || "Login failed");
+    }
+    setFormData({
+      email: '',
+      password: ''
+    });
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form className="w-full max-w-md bg-white p-8 rounded shadow">
+      <form className="w-full max-w-md bg-white p-8 rounded shadow" onSubmit={handleSubmit}>
         <h1 className="text-2xl font-bold text-center mb-6">Sign In</h1>
 
         <input
           type="email"
           placeholder="Email"
           className="w-full mb-4 px-4 py-2 border rounded"
+          name="email"
+          value={formData.email}
+          onChange={handleChange}
         />
 
         <input
           type="password"
           placeholder="Password"
           className="w-full mb-4 px-4 py-2 border rounded"
+          name="password"
+          value={formData.password}
+          onChange={handleChange}
         />
 
-        <button className="w-full bg-amber-700 text-white py-2 rounded hover:bg-amber-800">
+        <button type="submit" className="w-full bg-amber-700 text-white py-2 rounded hover:bg-amber-800">
           Sign In
         </button>
 
