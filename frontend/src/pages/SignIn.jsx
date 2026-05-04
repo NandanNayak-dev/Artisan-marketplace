@@ -1,20 +1,23 @@
-import React from 'react'
-import { useState } from 'react'
-import axios from 'axios';
+import React from "react";
+import { useState } from "react";
+import axios from "axios";
+import { signInWithPopup } from "firebase/auth";
+import { auth, googleProvider } from "../firebase";
+
 function SignIn() {
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  })
+    email: "",
+    password: "",
+  });
 
-    const handleChange = (e) => {
+  const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
   };
 
-   const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
@@ -23,7 +26,7 @@ function SignIn() {
         formData,
         {
           withCredentials: true,
-        }
+        },
       );
 
       console.log(res.data);
@@ -33,14 +36,41 @@ function SignIn() {
       alert(error.response?.data?.message || "Login failed");
     }
     setFormData({
-      email: '',
-      password: ''
+      email: "",
+      password: "",
     });
+  };
+
+  const handleGoogleSignin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+
+      const idToken = await result.user.getIdToken();
+
+      const res = await axios.post(
+        "http://localhost:8000/api/auth/google/signin",
+        {
+          idToken,
+        },
+        {
+          withCredentials: true,
+        },
+      );
+
+      console.log(res.data);
+      alert("Google signin successful");
+    } catch (error) {
+      console.log(error);
+      alert(error.response?.data?.message || "Google signin failed");
+    }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <form className="w-full max-w-md bg-white p-8 rounded shadow" onSubmit={handleSubmit}>
+      <form
+        className="w-full max-w-md bg-white p-8 rounded shadow"
+        onSubmit={handleSubmit}
+      >
         <h1 className="text-2xl font-bold text-center mb-6">Sign In</h1>
 
         <input
@@ -61,19 +91,29 @@ function SignIn() {
           onChange={handleChange}
         />
 
-        <button type="submit" className="w-full bg-amber-700 text-white py-2 rounded hover:bg-amber-800">
+        <button
+          type="submit"
+          className="w-full bg-amber-700 text-white py-2 rounded hover:bg-amber-800"
+        >
           Sign In
+        </button>
+        <button
+          type="button"
+          onClick={handleGoogleSignin}
+          className="w-full mt-4 border py-2 rounded hover:bg-gray-50"
+        >
+          Continue with Google
         </button>
 
         <p className="text-center text-sm mt-4">
-          Don't have an account?{' '}
+          Don't have an account?{" "}
           <a href="/signup" className="text-amber-700 hover:underline">
             Sign Up
           </a>
         </p>
       </form>
     </div>
-  )
+  );
 }
 
-export default SignIn
+export default SignIn;
