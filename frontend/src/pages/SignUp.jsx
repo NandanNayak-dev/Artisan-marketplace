@@ -7,6 +7,7 @@ function SignUp() {
     fullName: '',
     email: '',
     password: '',
+    role: 'buyer',
   })
 
     const handleChange = (e) => {
@@ -30,6 +31,7 @@ function SignUp() {
         fullName: '',
         email: '',
         password: '',
+        role: 'buyer',
       });
     } catch (error) {
       console.log(error);
@@ -66,6 +68,32 @@ function SignUp() {
           placeholder="Password"
           className="w-full mb-4 px-4 py-2 border rounded"
         />
+
+        <div className="mb-4 grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => setFormData({ ...formData, role: 'buyer' })}
+            className={`py-2 border rounded ${
+              formData.role === 'buyer'
+                ? 'bg-amber-700 text-white border-amber-700'
+                : 'bg-white text-gray-700 border-gray-300'
+            }`}
+          >
+            Buyer
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setFormData({ ...formData, role: 'seller' })}
+            className={`py-2 border rounded ${
+              formData.role === 'seller'
+                ? 'bg-amber-700 text-white border-amber-700'
+                : 'bg-white text-gray-700 border-gray-300'
+            }`}
+          >
+            Seller
+          </button>
+        </div>
         
 
         <button type='submit' className="w-full bg-amber-700 text-white py-2 rounded hover:bg-amber-800">

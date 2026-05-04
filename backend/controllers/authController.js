@@ -5,9 +5,9 @@ const User = require("../models/User");
 
 const signUp = async (req, res) => {
   try {
-    const { fullName, email, password } = req.body;
+    const { fullName, email, password, role } = req.body;
 
-    if (!fullName || !email || !password) {
+    if (!fullName || !email || !password || !role) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -23,6 +23,7 @@ const signUp = async (req, res) => {
       fullName,
       email,
       password: hashedPassword,
+      role,
     });
 
     // Generate JWT token
@@ -49,6 +50,7 @@ const signUp = async (req, res) => {
         id: user._id,
         fullName: user.fullName,
         email: user.email,
+        role: user.role,
       },
     });
   } catch (error) {
@@ -98,6 +100,7 @@ const signIn=async(req,res)=>{
         id: user._id,
         fullName: user.fullName,
         email: user.email,
+        role: user.role,
       },
     });
   }
