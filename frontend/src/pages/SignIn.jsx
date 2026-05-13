@@ -3,8 +3,10 @@ import { useState } from "react";
 import axios from "axios";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../../firebase";
+import { useNavigate } from "react-router-dom";
 
 function SignIn() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -30,7 +32,11 @@ function SignIn() {
       );
 
       console.log(res.data);
-      alert("Login successful");
+      if (res.data.user.role === "buyer") {
+        navigate("/buyer/dashboard");
+      } else {
+        navigate("/seller/dashboard");
+      }
     } catch (error) {
       console.log(error);
       alert(error.response?.data?.message || "Login failed");
@@ -58,7 +64,11 @@ function SignIn() {
       );
 
       console.log(res.data);
-      alert("Google signin successful");
+      if (res.data.user.role === "buyer") {
+        navigate("/buyer/dashboard");
+      } else {
+        navigate("/seller/dashboard");
+      }
     } catch (error) {
       console.log(error);
       alert(error.response?.data?.message || "Google signin failed");

@@ -3,8 +3,10 @@ import { useState } from "react";
 import axios from "axios";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "../../firebase";
+import { useNavigate } from "react-router-dom";
 
 function SignUp() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -29,12 +31,11 @@ function SignUp() {
 
       console.log(res.data);
 
-      setFormData({
-        fullName: "",
-        email: "",
-        password: "",
-        role: "buyer",
-      });
+      if (res.data.user.role === "buyer") {
+        navigate("/buyer/dashboard");
+      } else {
+        navigate("/seller/dashboard");
+      }
     } catch (error) {
       console.log(error);
     }
@@ -57,7 +58,12 @@ function SignUp() {
       );
 
       console.log(res.data);
-      alert("Google signup successful");
+
+      if (res.data.user.role === "buyer") {
+        navigate("/buyer/dashboard");
+      } else {
+        navigate("/seller/dashboard");
+      }
     } catch (error) {
       console.log(error);
       alert(error.response?.data?.message || "Google signup failed");
@@ -138,14 +144,13 @@ function SignUp() {
         >
           Continue with Google
         </button>
-        <p className="text-center text-sm mt-4">  
+        <p className="text-center text-sm mt-4">
           Already have an account?{" "}
           <a href="/login" className="text-amber-700 hover:underline">
             Log in
           </a>
         </p>
       </form>
-      
     </div>
   );
 }
