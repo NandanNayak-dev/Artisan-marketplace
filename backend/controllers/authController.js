@@ -122,7 +122,7 @@ const firebaseGoogleAuth = async (req, res) => {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
 
     const { uid, email, name } = decodedToken;
-
+    
     if (!email) {
       return res
         .status(400)
