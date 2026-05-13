@@ -146,7 +146,7 @@ function SignUp() {
         </button>
         <p className="text-center text-sm mt-4">
           Already have an account?{" "}
-          <a href="/login" className="text-amber-700 hover:underline">
+          <a href="/signin" className="text-amber-700 hover:underline">
             Log in
           </a>
         </p>

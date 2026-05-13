@@ -239,5 +239,15 @@ const firebaseGoogleSignIn = async (req, res) => {
   }
 };
 
+const logout = async(req, res) => {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "strict",
+  });
 
-module.exports = { signUp, signIn, firebaseGoogleAuth, firebaseGoogleSignIn };
+  return res.status(200).json({ message: "Logged out successfully" });
+};
+
+
+module.exports = { signUp, signIn, firebaseGoogleAuth, firebaseGoogleSignIn, logout };
