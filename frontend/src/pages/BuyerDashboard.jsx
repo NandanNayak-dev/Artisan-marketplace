@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import Navbar from "../components/Navbar";
 
 function BuyerDashboard() {
   const navigate = useNavigate();
@@ -42,10 +43,8 @@ function BuyerDashboard() {
 
   return (
     <div>
-      <h1>Buyer Dashboard</h1>
-      <p>Welcome, {user?.fullName}</p>
-
-      <button onClick={handleLogout}>Logout</button>
+      <Navbar title="Buyer Dashboard" user={user} onLogout={handleLogout} />
+      <h1 className="text-2xl font-bold mt-6">Welcome, {user?.fullName}</h1>
     </div>
   );
 }

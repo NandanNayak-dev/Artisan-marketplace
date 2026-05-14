@@ -1,9 +1,11 @@
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Navbar from "../components/Navbar";
 
 function SellerDashboard() {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const checkUser = async () => {
@@ -11,10 +13,12 @@ function SellerDashboard() {
         const res = await axios.get("http://localhost:8000/api/auth/me", {
           withCredentials: true,
         });
-
         if (res.data.user.role !== "seller") {
           navigate("/signin");
+          return;
         }
+
+        setUser(res.data.user);
       } catch (error) {
         navigate("/signin");
       }
@@ -39,8 +43,8 @@ function SellerDashboard() {
 
   return (
     <div>
-      <h1>Seller Dashboard</h1>
-      <button onClick={handleLogout}>Logout</button>
+      <Navbar title="Seller Dashboard" user={user} onLogout={handleLogout} />
+      <h1 className="text-2xl font-bold mt-6">Welcome, {user?.fullName}</h1>
     </div>
   );
 }
