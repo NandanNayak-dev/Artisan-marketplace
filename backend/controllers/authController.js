@@ -249,5 +249,37 @@ const logout = async(req, res) => {
   return res.status(200).json({ message: "Logged out successfully" });
 };
 
+//The below function is not currently used in the frontend but 
+// can be used to fetch the current user's info based on the JWT token 
+// stored in cookies. This can be useful for maintaining user sessions 
+// and displaying user-specific data on the frontend.
+const getMe = async (req, res) => {
+  try {
+    const token = req.cookies.token;
 
-module.exports = { signUp, signIn, firebaseGoogleAuth, firebaseGoogleSignIn, logout };
+    if (!token) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    return res.status(401).json({ message: "Invalid or expired token" });
+  }
+};
+
+module.exports = { signUp, signIn, firebaseGoogleAuth, firebaseGoogleSignIn, logout, getMe };

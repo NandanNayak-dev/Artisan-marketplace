@@ -5,9 +5,12 @@ const authRoutes = require('./routes/authRoutes');
 const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require("cookie-parser");
+
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 const PORT = process.env.PORT || 5000;
 // Allow requests from your frontend dev server (Vite default port 5173)
 app.use(cors({
