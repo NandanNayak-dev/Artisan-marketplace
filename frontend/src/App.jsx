@@ -6,6 +6,9 @@ import SignIn from "./pages/SignIn";
 import BuyerDashboard from "./pages/BuyerDashboard";
 import SellerDashboard from "./pages/SellerDashboard";
 
+import ForgotPassword from "./pages/ForgotPassword";
+
+
 function App() {
   const userData = null;
 
@@ -16,6 +19,9 @@ function App() {
 
       <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
       <Route path="/seller/dashboard" element={<SellerDashboard />} />
+
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+
     </Routes>
   );
 }

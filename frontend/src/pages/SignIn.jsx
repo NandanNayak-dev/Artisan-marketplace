@@ -121,6 +121,13 @@ function SignIn() {
             Sign Up
           </a>
         </p>
+
+        <a
+          href="/forgot-password"
+          className="text-sm text-amber-700 hover:underline text-right block mt-4"
+        >
+          Forgot password?
+        </a>
       </form>
     </div>
   );

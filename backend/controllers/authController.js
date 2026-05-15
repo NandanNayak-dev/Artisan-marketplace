@@ -1,6 +1,10 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const admin = require("../config/firebaseAdmin");
+const PasswordResetOtp = require("../models/PasswordResetOtp");
+const transporter = require("../config/emailTransporter");
+
+
 
 const User = require("../models/User");
 
@@ -282,4 +286,117 @@ const getMe = async (req, res) => {
   }
 };
 
-module.exports = { signUp, signIn, firebaseGoogleAuth, firebaseGoogleSignIn, logout, getMe };
+const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "No user found with this email" });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await PasswordResetOtp.deleteMany({ email });
+
+    await PasswordResetOtp.create({
+      email,
+      otp,
+      expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Password Reset OTP",
+      text: `Your password reset OTP is ${otp}. It is valid for 10 minutes.`,
+    });
+
+    return res.status(200).json({
+      message: "OTP sent to your email",
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to send OTP" });
+  }
+};
+
+const verifyResetOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: "Email and OTP are required" });
+    }
+
+    const resetOtp = await PasswordResetOtp.findOne({ email, otp });
+
+    if (!resetOtp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    if (resetOtp.expiresAt < new Date()) {
+      return res.status(400).json({ message: "OTP has expired" });
+    }
+
+    resetOtp.verified = true;
+    await resetOtp.save();
+
+    return res.status(200).json({
+      message: "OTP verified successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "OTP verification failed" });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { email, password, confirmPassword } = req.body;
+
+    if (!email || !password || !confirmPassword) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    const resetOtp = await PasswordResetOtp.findOne({
+      email,
+      verified: true,
+    });
+
+    if (!resetOtp) {
+      return res.status(400).json({ message: "OTP verification required" });
+    }
+
+    if (resetOtp.expiresAt < new Date()) {
+      return res.status(400).json({ message: "OTP has expired" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await User.findOneAndUpdate(
+      { email },
+      {
+        password: hashedPassword,
+        authProvider: "local",
+      }
+    );
+
+    await PasswordResetOtp.deleteMany({ email });
+
+    return res.status(200).json({
+      message: "Password reset successful",
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Password reset failed" });
+  }
+};
+
+module.exports = { signUp, signIn, firebaseGoogleAuth, firebaseGoogleSignIn, logout, getMe, forgotPassword, verifyResetOtp ,resetPassword};
