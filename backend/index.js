@@ -2,6 +2,7 @@ require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const User = require('./models/User');
 const authRoutes = require('./routes/authRoutes');
+const productRoutes = require('./routes/productRoutes');
 const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors');
@@ -20,7 +21,7 @@ app.use(cors({
 
 //Routes--------------------------------
 app.use('/api/auth', authRoutes);
-
+app.use('/api/products', productRoutes);
 // Connect to MongoDB-----------------
 mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log('Connected to MongoDB'))

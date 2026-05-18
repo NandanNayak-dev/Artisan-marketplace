@@ -27,6 +27,9 @@ function SignUp() {
       const res = await axios.post(
         "http://localhost:8000/api/auth/signup",
         formData,
+        {
+          withCredentials: true,
+        }
       );
 
       console.log(res.data);
