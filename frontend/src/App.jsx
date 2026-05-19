@@ -5,7 +5,7 @@ import SignIn from "./pages/SignIn";
 
 import BuyerDashboard from "./pages/BuyerDashboard";
 import SellerDashboard from "./pages/SellerDashboard";
-
+import AddProduct from "./pages/AddProduct";
 import ForgotPassword from "./pages/ForgotPassword";
 
 
@@ -19,7 +19,7 @@ function App() {
 
       <Route path="/buyer/dashboard" element={<BuyerDashboard />} />
       <Route path="/seller/dashboard" element={<SellerDashboard />} />
-
+      <Route path="/seller/add-product" element={<AddProduct />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
     </Routes>
