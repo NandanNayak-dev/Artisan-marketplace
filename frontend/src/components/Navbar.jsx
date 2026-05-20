@@ -1,9 +1,27 @@
 import { useState } from "react";
-
-function Navbar({ title, user, onLogout }) {
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+function Navbar({ title, user}) {
   const [open, setOpen] = useState(false);
 
   const firstLetter = user?.fullName?.charAt(0).toUpperCase() || "U";
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await axios.post(
+        "http://localhost:8000/api/auth/logout",
+        {},
+        {
+          withCredentials: true,
+        }
+      );
+
+      navigate("/signin");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
 
   return (
     <nav className="bg-white border-b px-6 py-4 flex items-center justify-between">
@@ -33,7 +51,7 @@ function Navbar({ title, user, onLogout }) {
             </p>
 
             <button
-              onClick={onLogout}
+              onClick={handleLogout}
               className="w-full bg-amber-700 text-white py-2 rounded hover:bg-amber-800"
             >
               Logout

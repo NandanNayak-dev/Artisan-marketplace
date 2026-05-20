@@ -36,24 +36,10 @@ function BuyerDashboard() {
     fetchProducts();
   }, [navigate]);
 
-  const handleLogout = async () => {
-    try {
-      await axios.post(
-        "http://localhost:8000/api/auth/logout",
-        {},
-        {
-          withCredentials: true,
-        },
-      );
-      navigate("/signin");
-    } catch (error) {
-      console.error("Error logging out:", error);
-    }
-  };
 
 return (
   <div>
-    <Navbar title="Buyer Dashboard" user={user} onLogout={handleLogout} />
+    <Navbar title="Buyer Dashboard" user={user} />
 
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">

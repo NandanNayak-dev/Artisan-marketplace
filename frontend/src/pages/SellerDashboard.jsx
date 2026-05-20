@@ -38,20 +38,7 @@ function SellerDashboard() {
     fetchProducts();
   }, [navigate]);
 
-  const handleLogout = async () => {
-    try {
-      await axios.post(
-        "http://localhost:8000/api/auth/logout",
-        {},
-        {
-          withCredentials: true,
-        },
-      );
-      navigate("/signin");
-    } catch (error) {
-      console.error("Error logging out:", error);
-    }
-  };
+  
 
   const handleDelete = async (productId) => {
     const confirmDelete = window.confirm(
@@ -73,7 +60,7 @@ function SellerDashboard() {
   };
   return (
     <div className="min-h-screen bg-gray-100">
-      <Navbar title="Seller Dashboard" user={user} onLogout={handleLogout} />
+      <Navbar title="Seller Dashboard" user={user}  />
 
       <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
