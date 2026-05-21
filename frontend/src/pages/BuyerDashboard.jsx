@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 
+
 function BuyerDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -36,55 +37,51 @@ function BuyerDashboard() {
     fetchProducts();
   }, [navigate]);
 
+  return (
+    <div>
+      <Navbar title="Buyer Dashboard" user={user} />
 
-return (
-  <div>
-    <Navbar title="Buyer Dashboard" user={user} />
+      <div className="p-6">
+        <h1 className="text-2xl font-bold mb-6">Welcome, {user?.fullName}</h1>
 
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">
-        Welcome, {user?.fullName}
-      </h1>
+        <h2 className="text-xl font-semibold mb-4">Available Products</h2>
 
-      <h2 className="text-xl font-semibold mb-4">
-        Available Products
-      </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {products.map((product) => (
+            <div key={product._id} className="border rounded-lg p-4 shadow-sm">
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-full h-40 object-cover rounded-md mb-4"
+              />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {products.map((product) => (
-          <div
-            key={product._id}
-            className="border rounded-lg p-4 shadow-sm"
-          >
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-40 object-cover rounded-md mb-4"
-            />
+              <h3 className="text-lg font-bold">{product.name}</h3>
 
-            <h3 className="text-lg font-bold">{product.name}</h3>
+              <p className="text-gray-600">{product.description}</p>
 
-            <p className="text-gray-600">{product.description}</p>
+              <p className="mt-2 font-semibold">₹{product.price}</p>
 
-            <p className="mt-2 font-semibold">₹{product.price}</p>
+              <p className="text-sm text-gray-500">
+                Category: {product.category}
+              </p>
 
-            <p className="text-sm text-gray-500">
-              Category: {product.category}
-            </p>
+              <p className="text-sm text-gray-500">Stock: {product.stock}</p>
 
-            <p className="text-sm text-gray-500">
-              Stock: {product.stock}
-            </p>
-
-            <p className="text-sm text-gray-500">
-              Seller: {product.seller?.fullName}
-            </p>
-          </div>
-        ))}
+              <p className="text-sm text-gray-500">
+                Seller: {product.seller?.fullName}
+              </p>
+              <button
+                onClick={() => navigate(`/products/${product._id}`)}
+                className="mt-4 w-full bg-amber-700 text-white py-2 rounded hover:bg-amber-800"
+              >
+                View Details
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 }
 
 export default BuyerDashboard;

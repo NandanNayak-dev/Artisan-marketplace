@@ -7,6 +7,7 @@ import BuyerDashboard from "./pages/BuyerDashboard";
 import SellerDashboard from "./pages/SellerDashboard";
 import AddProduct from "./pages/AddProduct";
 import ForgotPassword from "./pages/ForgotPassword";
+import ProductDetails from "./pages/ProductDetails";
 
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
       <Route path="/seller/dashboard" element={<SellerDashboard />} />
       <Route path="/seller/add-product" element={<AddProduct />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/products/:id" element={<ProductDetails />} />
 
     </Routes>
   );
