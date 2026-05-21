@@ -1,7 +1,8 @@
 const Product = require("../models/Product");
+const cloudinary = require("../config/cloudinary");
 const createProduct = async (req, res) => {
   try {
-    const { name, description, price, category, stock, image, seller } =
+    const { name, description, price, category, stock, seller } =
       req.body;
     if (
       !name ||
@@ -9,11 +10,18 @@ const createProduct = async (req, res) => {
       !price ||
       !category ||
       !stock ||
-      !image ||
       !seller
     ) {
       return res.status(400).json({ message: "All fields are required" });
     }
+
+    if(!req.file){
+      return res.status(400).json({ message: "Product image is required" });
+    }
+
+     const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+      folder: "artisan-products",
+    });
 
     const product = await Product.create({
       name,
@@ -21,8 +29,8 @@ const createProduct = async (req, res) => {
       price,
       category,
       stock,
-      image,
       seller,
+      image: uploadResult.secure_url,
     });
     return res
       .status(201)

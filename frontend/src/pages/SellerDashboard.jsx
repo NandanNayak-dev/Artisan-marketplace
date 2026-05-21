@@ -38,8 +38,6 @@ function SellerDashboard() {
     fetchProducts();
   }, [navigate]);
 
-  
-
   const handleDelete = async (productId) => {
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this product?",
@@ -60,7 +58,7 @@ function SellerDashboard() {
   };
   return (
     <div className="min-h-screen bg-gray-100">
-      <Navbar title="Seller Dashboard" user={user}  />
+      <Navbar title="Seller Dashboard" user={user} />
 
       <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -88,33 +86,30 @@ function SellerDashboard() {
             {products
               .filter((product) => product.seller?._id === user?.id)
               .map((product) => (
-                <div
-                  key={product._id}
-                  className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition"
-                >
-                  <h2 className="text-lg font-semibold text-gray-800 mb-2">
-                    {product.name}
-                  </h2>
+                <div key={product._id} className="bg-white rounded shadow p-4">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-48 object-cover rounded mb-4"
+                  />
 
-                  <p className="text-gray-600">
-                    Price:{" "}
-                    <span className="font-semibold text-amber-700">
-                      ₹{product.price}
-                    </span>
+                  <h3 className="text-lg font-bold">{product.name}</h3>
+
+                  <p className="text-gray-600">{product.description}</p>
+
+                  <p className="mt-2 font-semibold">₹{product.price}</p>
+
+                  <p className="text-sm text-gray-500">
+                    Category: {product.category}
                   </p>
 
-                  <p className="text-gray-600 mt-1">
-                    Stock:{" "}
-                    <span className="font-semibold text-gray-800">
-                      {product.stock}
-                    </span>
+                  <p className="text-sm text-gray-500">
+                    Stock: {product.stock}
                   </p>
-                  <button
-                    onClick={() => handleDelete(product._id)}
-                    className="mt-4 w-full bg-red-600 text-white py-2 rounded hover:bg-red-700 transition"
-                  >
-                    Delete
-                  </button>
+
+                  <p className="text-sm text-gray-500">
+                    Seller: {product.seller?.fullName}
+                  </p>
                 </div>
               ))}
           </div>

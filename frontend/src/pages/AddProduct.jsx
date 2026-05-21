@@ -13,8 +13,9 @@ function AddProduct() {
     price: "",
     category: "",
     stock: "",
-    image: "",
   });
+
+  const [image, setImage] = useState(null);
 
   useEffect(() => {
     const checkSeller = async () => {
@@ -44,29 +45,43 @@ function AddProduct() {
     });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    try {
-      await axios.post(
-        "http://localhost:8000/api/products",
-        {
-          ...formData,
-          price: Number(formData.price),
-          stock: Number(formData.stock),
-          seller: user.id,
-        },
-        {
-          withCredentials: true,
-        }
-      );
-
-      alert("Product added successfully");
-      navigate("/seller/dashboard");
-    } catch (error) {
-      alert(error.response?.data?.message || "Failed to add product");
-    }
+  const handleImageChange = (e) => {
+    setImage(e.target.files[0]);
   };
+
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (!image) {
+    alert("Please select a product image");
+    return;
+  }
+
+  try {
+    const data = new FormData();
+
+    data.append("name", formData.name);
+    data.append("description", formData.description);
+    data.append("price", Number(formData.price));
+    data.append("category", formData.category);
+    data.append("stock", Number(formData.stock));
+    data.append("seller", user.id);
+    data.append("image", image);
+
+    await axios.post("http://localhost:8000/api/products", data, {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    alert("Product added successfully");
+    navigate("/seller/dashboard");
+  } catch (error) {
+    console.log(error);
+    alert(error.response?.data?.message || "Failed to add product");
+  }
+};
 
   return (
     <div>
@@ -126,10 +141,10 @@ function AddProduct() {
           />
 
           <input
+            type="file"
             name="image"
-            placeholder="Product image URL"
-            value={formData.image}
-            onChange={handleChange}
+            accept="image/*"
+            onChange={handleImageChange}
             className="w-full border px-4 py-2 rounded"
             required
           />

@@ -5,6 +5,7 @@ import { auth, googleProvider } from "../../firebase";
 import { useNavigate, Link } from "react-router-dom";
 
 function SignUp() {
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: "",
@@ -26,7 +27,7 @@ function SignUp() {
       const res = await axios.post(
         "http://localhost:8000/api/auth/signup",
         formData,
-        { withCredentials: true }
+        { withCredentials: true },
       );
       if (res.data.user.role === "buyer") {
         navigate("/buyer/dashboard");
@@ -34,7 +35,14 @@ function SignUp() {
         navigate("/seller/dashboard");
       }
     } catch (error) {
-      console.log(error);
+      alert(error.response?.data?.message || "Signup failed");
+      setFormData({
+        fullName: "",
+        email: "",
+        password: "",
+        role: "buyer",
+      })
+      setErrorMessage(error.response?.data?.message || "Signup failed");
     }
   };
 
@@ -45,7 +53,7 @@ function SignUp() {
       const res = await axios.post(
         "http://localhost:8000/api/auth/google",
         { idToken, role: formData.role },
-        { withCredentials: true }
+        { withCredentials: true },
       );
       if (res.data.user.role === "buyer") {
         navigate("/buyer/dashboard");
@@ -68,23 +76,19 @@ function SignUp() {
           className="absolute inset-0 w-full h-full object-cover opacity-60"
         />
         <div className="relative z-10 p-12 text-stone-50 flex flex-col items-center text-center max-w-lg">
-    
-        
           <h1 className="text-4xl md:text-5xl font-serif mb-4 leading-tight tracking-wide">
             Discover Handmade Mastery.
           </h1>
           <p className="text-stone-300 text-lg">
-            Join a community of creators and appreciators. Unique crafts, directly from the artisans' hands to yours.
+            Join a community of creators and appreciators. Unique crafts,
+            directly from the artisans' hands to yours.
           </p>
         </div>
       </div>
 
       {/* Right Side - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12">
-        <form
-          className="w-full max-w-md"
-          onSubmit={handleSubmit}
-        >
+        <form className="w-full max-w-md" onSubmit={handleSubmit}>
           <div className="mb-8 text-center lg:text-left">
             <h2 className="text-3xl font-serif text-stone-800 mb-2">Sign Up</h2>
             <p className="text-stone-500">Create your account to continue</p>
@@ -118,7 +122,9 @@ function SignUp() {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">Full Name</label>
+              <label className="block text-sm font-medium text-stone-700 mb-1">
+                Full Name
+              </label>
               <input
                 type="text"
                 name="fullName"
@@ -131,7 +137,9 @@ function SignUp() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">Email Address</label>
+              <label className="block text-sm font-medium text-stone-700 mb-1">
+                Email Address
+              </label>
               <input
                 type="email"
                 name="email"
@@ -144,7 +152,9 @@ function SignUp() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-1">Password</label>
+              <label className="block text-sm font-medium text-stone-700 mb-1">
+                Password
+              </label>
               <input
                 type="password"
                 name="password"
@@ -166,7 +176,9 @@ function SignUp() {
 
           <div className="relative flex items-center py-6">
             <div className="flex-grow border-t border-stone-300"></div>
-            <span className="flex-shrink-0 mx-4 text-stone-400 text-sm">or</span>
+            <span className="flex-shrink-0 mx-4 text-stone-400 text-sm">
+              or
+            </span>
             <div className="flex-grow border-t border-stone-300"></div>
           </div>
 
@@ -198,7 +210,10 @@ function SignUp() {
 
           <p className="text-center text-sm mt-8 text-stone-600">
             Already have an account{" "}
-            <Link to="/signin" className="text-amber-800 font-medium hover:underline">
+            <Link
+              to="/signin"
+              className="text-amber-800 font-medium hover:underline"
+            >
               Sign in here
             </Link>
           </p>
