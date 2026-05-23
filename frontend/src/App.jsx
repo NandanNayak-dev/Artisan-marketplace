@@ -8,6 +8,7 @@ import SellerDashboard from "./pages/SellerDashboard";
 import AddProduct from "./pages/AddProduct";
 import ForgotPassword from "./pages/ForgotPassword";
 import ProductDetails from "./pages/ProductDetails";
+import Cart from "./pages/Cart";
 
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
 
   return (
     <Routes>
+      <Route path="/" element={<Navigate to="/signin" replace />} />
       <Route path="/signup" element={<SignUp />} />
       <Route path="/signin" element={<SignIn />} />
 
@@ -23,7 +25,7 @@ function App() {
       <Route path="/seller/add-product" element={<AddProduct />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/products/:id" element={<ProductDetails />} />
-
+      <Route path="/cart" element={<Cart />} />
     </Routes>
   );
 }

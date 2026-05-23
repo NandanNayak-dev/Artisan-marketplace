@@ -21,7 +21,7 @@ function ProductDetails() {
         setUser(userRes.data.user);
 
         const productRes = await axios.get(
-          `http://localhost:8000/api/products/${id}`
+          `http://localhost:8000/api/products/${id}`,
         );
 
         setProduct(productRes.data.product);
@@ -45,6 +45,27 @@ function ProductDetails() {
     return <p className="text-center mt-10">Product not found</p>;
   }
 
+  const handleAddToCart = async () => {
+    try {
+      await axios.post(
+        "http://localhost:8000/api/cart/add",
+        {
+          buyer: user.id,
+          product: product._id,
+          quantity: 1,
+        },
+        {
+          withCredentials: true,
+        },
+      );
+
+      alert("Product added to cart");
+    } catch (error) {
+      console.log(error);
+      alert(error.response?.data?.message || "Failed to add product to cart");
+    }
+  };
+
   return (
     <div>
       <Navbar title="Product Details" user={user} />
@@ -57,9 +78,7 @@ function ProductDetails() {
         />
 
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">
-            {product.name}
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-800">{product.name}</h1>
 
           <p className="text-gray-600 mt-4">{product.description}</p>
 
@@ -67,13 +86,9 @@ function ProductDetails() {
             ₹{product.price}
           </p>
 
-          <p className="mt-4 text-gray-700">
-            Category: {product.category}
-          </p>
+          <p className="mt-4 text-gray-700">Category: {product.category}</p>
 
-          <p className="mt-2 text-gray-700">
-            Stock: {product.stock}
-          </p>
+          <p className="mt-2 text-gray-700">Stock: {product.stock}</p>
 
           <p className="mt-2 text-gray-700">
             Seller: {product.seller.fullName}
@@ -92,6 +107,19 @@ function ProductDetails() {
               onClick={() => alert("Buy Now feature coming next")}
             >
               Buy Now
+            </button>
+
+            <button
+              className="flex-1 bg-amber-700 text-white py-2 rounded hover:bg-amber-800"
+              onClick={handleAddToCart}
+            >
+              Add to Cart
+            </button>
+            <button
+              onClick={() => navigate("/cart")}
+              className="bg-amber-700 text-white px-4 py-2 rounded"
+            >
+              My Cart
             </button>
           </div>
         </div>
