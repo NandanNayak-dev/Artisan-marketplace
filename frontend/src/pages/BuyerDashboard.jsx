@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 
-
 function BuyerDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -38,48 +37,80 @@ function BuyerDashboard() {
   }, [navigate]);
 
   return (
-    <div>
+    
+    <div className="min-h-screen bg-[#FAF9F6]">
       <Navbar title="Buyer Dashboard" user={user} />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Editorial Style Header */}
+        <div className="mb-12 border-b border-stone-200 pb-8">
+          <h1 className="text-4xl font-serif text-stone-900 mb-3">
+            Welcome back, {user?.fullName?.split(' ')[0] || 'Guest'}
+          </h1>
+          <p className="text-lg text-stone-500">
+            Explore the latest handcrafted arrivals from our artisans.
+          </p>
+        </div>
 
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-6">Welcome, {user?.fullName}</h1>
-
-        <h2 className="text-xl font-semibold mb-4">Available Products</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Premium Product Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {products.map((product) => (
-            <div key={product._id} className="border rounded-lg p-4 shadow-sm">
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full h-40 object-cover rounded-md mb-4"
-              />
+            <div 
+              key={product._id} 
+              className="group flex flex-col bg-white rounded-2xl border border-stone-200/60 overflow-hidden hover:shadow-xl hover:shadow-stone-200/50 transition-all duration-500"
+            >
+              {/* Image Container with Hover Zoom & Floating Badge */}
+              <div className="relative h-72 overflow-hidden bg-stone-100">
+                <img
+                  src={product.image}
+                  alt={product.name}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                />
+                <div className="absolute top-4 left-4">
+                  <span className="bg-white/90 backdrop-blur-md text-stone-800 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full shadow-sm">
+                    {product.category}
+                  </span>
+                </div>
+              </div>
 
-              <h3 className="text-lg font-bold">{product.name}</h3>
+              {/* Card Content Area */}
+              <div className="p-6 flex flex-col flex-grow">
+                <div className="flex justify-between items-start gap-4 mb-1">
+                  <h3 className="text-xl font-serif text-stone-900 leading-tight group-hover:text-amber-800 transition-colors">
+                    {product.name}
+                  </h3>
+                  <span className="text-lg font-semibold text-stone-900">
+                    ₹{product.price}
+                  </span>
+                </div>
+                
+                <p className="text-sm font-medium text-stone-400 mb-4">
+                  By <span className="text-stone-600">{product.seller?.fullName}</span>
+                </p>
 
-              <p className="text-gray-600">{product.description}</p>
+                <p className="text-stone-600 text-sm line-clamp-2 mb-6 flex-grow">
+                  {product.description}
+                </p>
 
-              <p className="mt-2 font-semibold">₹{product.price}</p>
-
-              <p className="text-sm text-gray-500">
-                Category: {product.category}
-              </p>
-
-              <p className="text-sm text-gray-500">Stock: {product.stock}</p>
-
-              <p className="text-sm text-gray-500">
-                Seller: {product.seller?.fullName}
-              </p>
-              <button
-                onClick={() => navigate(`/products/${product._id}`)}
-                className="mt-4 w-full bg-amber-700 text-white py-2 rounded hover:bg-amber-800"
-              >
-                View Details
-              </button>
+                {/* Footer of the card */}
+                <div className="pt-4 border-t border-stone-100 flex flex-col gap-4 mt-auto">
+                  <div className="flex items-center justify-between text-xs font-medium text-stone-500">
+                    <span className="bg-stone-100 px-2.5 py-1 rounded-md">
+                      {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                    </span>
+                  </div>
+                  
+                  <button
+                    onClick={() => navigate(`/products/${product._id}`)}
+                    className="w-full bg-transparent border border-amber-800 text-amber-900 py-2.5 rounded-xl hover:bg-amber-800 hover:text-white transition-colors duration-300 text-sm font-bold tracking-wide"
+                  >
+                    View Details
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
