@@ -65,6 +65,31 @@ function ProductDetails() {
       alert(error.response?.data?.message || "Failed to add product to cart");
     }
   };
+  const handleBuyNow = async () => {
+    try {
+      if (!user) {
+        alert("Please login first");
+        return;
+      }
+
+      await axios.post(
+        "http://localhost:8000/api/orders/buy-now",
+        {
+          buyer: user.id,
+          productId: product._id,
+          quantity: 1,
+        },
+        {
+          withCredentials: true,
+        },
+      );
+
+      alert("Order placed successfully");
+      navigate("/my-orders");
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to place order");
+    }
+  };
 
   return (
     <div>
@@ -104,7 +129,7 @@ function ProductDetails() {
 
             <button
               className="flex-1 border border-amber-700 text-amber-700 py-2 rounded hover:bg-amber-50"
-              onClick={() => alert("Buy Now feature coming next")}
+              onClick={handleBuyNow}
             >
               Buy Now
             </button>

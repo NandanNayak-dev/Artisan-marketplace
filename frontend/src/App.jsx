@@ -10,6 +10,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
 
+import MyOrders from "./pages/MyOrders";
+import SellerOrders from "./pages/SellerOrders";
 
 function App() {
   const userData = null;
@@ -26,6 +28,9 @@ function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/products/:id" element={<ProductDetails />} />
       <Route path="/cart" element={<Cart />} />
+
+      <Route path="/my-orders" element={<MyOrders />} />
+      <Route path="/seller/orders" element={<SellerOrders />} />
     </Routes>
   );
 }

@@ -37,14 +37,13 @@ function BuyerDashboard() {
   }, [navigate]);
 
   return (
-    
     <div className="min-h-screen bg-[#FAF9F6]">
       <Navbar title="Buyer Dashboard" user={user} />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Editorial Style Header */}
         <div className="mb-12 border-b border-stone-200 pb-8">
           <h1 className="text-4xl font-serif text-stone-900 mb-3">
-            Welcome back, {user?.fullName?.split(' ')[0] || 'Guest'}
+            Welcome back, {user?.fullName?.split(" ")[0] || "Guest"}
           </h1>
           <p className="text-lg text-stone-500">
             Explore the latest handcrafted arrivals from our artisans.
@@ -54,8 +53,8 @@ function BuyerDashboard() {
         {/* Premium Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {products.map((product) => (
-            <div 
-              key={product._id} 
+            <div
+              key={product._id}
               className="group flex flex-col bg-white rounded-2xl border border-stone-200/60 overflow-hidden hover:shadow-xl hover:shadow-stone-200/50 transition-all duration-500"
             >
               {/* Image Container with Hover Zoom & Floating Badge */}
@@ -82,9 +81,12 @@ function BuyerDashboard() {
                     ₹{product.price}
                   </span>
                 </div>
-                
+
                 <p className="text-sm font-medium text-stone-400 mb-4">
-                  By <span className="text-stone-600">{product.seller?.fullName}</span>
+                  By{" "}
+                  <span className="text-stone-600">
+                    {product.seller?.fullName}
+                  </span>
                 </p>
 
                 <p className="text-stone-600 text-sm line-clamp-2 mb-6 flex-grow">
@@ -95,10 +97,12 @@ function BuyerDashboard() {
                 <div className="pt-4 border-t border-stone-100 flex flex-col gap-4 mt-auto">
                   <div className="flex items-center justify-between text-xs font-medium text-stone-500">
                     <span className="bg-stone-100 px-2.5 py-1 rounded-md">
-                      {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
+                      {product.stock > 0
+                        ? `${product.stock} in stock`
+                        : "Out of stock"}
                     </span>
                   </div>
-                  
+
                   <button
                     onClick={() => navigate(`/products/${product._id}`)}
                     className="w-full bg-transparent border border-amber-800 text-amber-900 py-2.5 rounded-xl hover:bg-amber-800 hover:text-white transition-colors duration-300 text-sm font-bold tracking-wide"
@@ -111,6 +115,12 @@ function BuyerDashboard() {
           ))}
         </div>
       </main>
+      <button
+        onClick={() => navigate("/my-orders")}
+        className="bg-amber-700 text-white px-4 py-2 rounded"
+      >
+        My Orders
+      </button>
     </div>
   );
 }

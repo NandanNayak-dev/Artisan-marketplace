@@ -115,6 +115,12 @@ function SellerDashboard() {
           </div>
         </div>
       </div>
+      <button
+        onClick={() => navigate("/seller/orders")}
+        className="bg-amber-700 text-white px-4 py-2 rounded"
+      >
+        Orders
+      </button>
     </div>
   );
 }
