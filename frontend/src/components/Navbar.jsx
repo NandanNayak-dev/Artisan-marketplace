@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 
 function Navbar({ title, user }) {
@@ -29,15 +29,16 @@ function Navbar({ title, user }) {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         {/* Brand */}
         <div className="flex items-center gap-4">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-700 to-orange-900 text-white shadow-lg shadow-amber-900/20 ring-1 ring-white/60">
-            <span className="font-serif text-lg font-semibold">A</span>
-          </div>
+          <Link to="/buyer/dashboard" className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-amber-700 rounded flex items-center justify-center text-white font-bold text-xl">
+              A
+            </div>
+            <span className="text-xl font-bold text-stone-800 hidden sm:block">
+              Artisan<span className="text-amber-700">.</span>
+            </span>
+          </Link>
 
           <div className="leading-tight">
-            <h1 className="font-serif text-lg font-semibold tracking-wide text-stone-900 sm:text-xl">
-              Artisan Marketplace
-            </h1>
-
             <div className="mt-1 flex items-center gap-2">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
               <p className="text-xs font-medium uppercase tracking-[0.16em] text-stone-500">

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 
@@ -21,7 +21,7 @@ function ProductDetails() {
         setUser(userRes.data.user);
 
         const productRes = await axios.get(
-          `http://localhost:8000/api/products/${id}`,
+          `http://localhost:8000/api/products/${id}`
         );
 
         setProduct(productRes.data.product);
@@ -38,14 +38,33 @@ function ProductDetails() {
   }, [id, navigate]);
 
   if (loading) {
-    return <p className="text-center mt-10">Loading product...</p>;
+    return (
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-3">
+                <div className="w-10 h-10 border-4 border-amber-700 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-stone-600 font-medium animate-pulse">Loading product details...</p>
+            </div>
+        </div>
+    );
   }
 
   if (!product) {
-    return <p className="text-center mt-10">Product not found</p>;
+    return (
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+            <div className="text-center">
+                <h2 className="text-2xl font-bold text-stone-800">Product not found</h2>
+                <button onClick={() => navigate("/buyer/dashboard")} className="mt-4 text-amber-700 hover:underline">Go back to shop</button>
+            </div>
+        </div>
+    );
   }
 
   const handleAddToCart = async () => {
+    if (!user) {
+        alert("Please login first");
+        navigate("/signin");
+        return;
+    }
     try {
       await axios.post(
         "http://localhost:8000/api/cart/add",
@@ -56,7 +75,7 @@ function ProductDetails() {
         },
         {
           withCredentials: true,
-        },
+        }
       );
 
       alert("Product added to cart");
@@ -65,13 +84,14 @@ function ProductDetails() {
       alert(error.response?.data?.message || "Failed to add product to cart");
     }
   };
-  const handleBuyNow = async () => {
-    try {
-      if (!user) {
-        alert("Please login first");
-        return;
-      }
 
+  const handleBuyNow = async () => {
+    if (!user) {
+        alert("Please login first");
+        navigate("/signin");
+        return;
+    }
+    try {
       await axios.post(
         "http://localhost:8000/api/orders/buy-now",
         {
@@ -81,7 +101,7 @@ function ProductDetails() {
         },
         {
           withCredentials: true,
-        },
+        }
       );
 
       alert("Order placed successfully");
@@ -92,61 +112,145 @@ function ProductDetails() {
   };
 
   return (
-    <div>
+    <div className="min-h-screen bg-gray-100 pb-10">
       <Navbar title="Product Details" user={user} />
 
-      <div className="max-w-5xl mx-auto mt-10 bg-white p-8 rounded shadow grid grid-cols-1 md:grid-cols-2 gap-8">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-96 object-cover rounded"
-        />
+      {/* Breadcrumbs */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+            <nav className="flex text-sm text-stone-500">
+                <Link to="/buyer/dashboard" className="hover:text-amber-700">Home</Link>
+                <span className="mx-2">/</span>
+                <span className="hover:text-amber-700 cursor-pointer">{product.category}</span>
+                <span className="mx-2">/</span>
+                <span className="text-stone-800 font-medium truncate">{product.name}</span>
+            </nav>
+        </div>
+      </div>
 
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">{product.name}</h1>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-xl shadow-sm border border-stone-200 overflow-hidden">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 md:gap-0">
+                
+                {/* Left Column: Image Gallery */}
+                <div className="bg-stone-50 p-8 flex items-center justify-center border-b md:border-b-0 md:border-r border-stone-200 lg:col-span-2">
+                    <div className="relative w-full max-w-md aspect-square bg-white rounded-lg overflow-hidden shadow-sm group">
+                        <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-full h-full object-contain p-4 transition-transform duration-500 group-hover:scale-110 cursor-zoom-in"
+                        />
+                        <div className="absolute top-4 left-4">
+                             <span className="bg-amber-700 text-white text-xs font-bold px-2 py-1 rounded shadow-sm">
+                                HANDMADE
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
-          <p className="text-gray-600 mt-4">{product.description}</p>
+                {/* Right Column: Product Details */}
+                <div className="p-6 lg:p-8 flex flex-col">
+                    <div className="flex-1">
+                        <p 
+                            onClick={() => navigate('/buyer/dashboard', { state: { filter: product.category } })}
+                            className="text-sm text-amber-700 font-medium uppercase tracking-wide cursor-pointer hover:underline mb-2"
+                        >
+                            {product.category}
+                        </p>
+                        
+                        <h1 className="text-2xl md:text-3xl font-bold text-stone-900 leading-tight mb-2">
+                            {product.name}
+                        </h1>
 
-          <p className="text-2xl font-bold text-amber-700 mt-6">
-            ₹{product.price}
-          </p>
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="flex">
+                                {[...Array(5)].map((_, i) => (
+                                    <svg key={i} className={`w-4 h-4 ${i < 4 ? 'text-amber-400' : 'text-stone-300'}`} fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                ))}
+                            </div>
+                            <span className="text-sm text-stone-500 font-medium cursor-pointer hover:text-amber-700">(128 Ratings)</span>
+                        </div>
 
-          <p className="mt-4 text-gray-700">Category: {product.category}</p>
+                        <div className="flex items-baseline gap-3 mb-6">
+                            <span className="text-3xl font-bold text-stone-900">₹{product.price}</span>
+                            <span className="text-lg text-stone-500 line-through">₹{Math.floor(product.price * 1.3)}</span>
+                            <span className="text-sm font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded">30% OFF</span>
+                        </div>
 
-          <p className="mt-2 text-gray-700">Stock: {product.stock}</p>
+                        {/* Trust Badges */}
+                        <div className="flex gap-4 mb-8">
+                             <div className="flex items-center gap-1 text-xs font-medium text-stone-600">
+                                <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Free Delivery
+                             </div>
+                             <div className="flex items-center gap-1 text-xs font-medium text-stone-600">
+                                <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                100% Handcrafted
+                             </div>
+                        </div>
 
-          <p className="mt-2 text-gray-700">
-            Seller: {product.seller.fullName}
-          </p>
+                        {/* Description */}
+                        <div className="mb-8">
+                            <h3 className="text-lg font-bold text-stone-800 mb-2">Product Description</h3>
+                            <p className="text-stone-600 text-sm leading-relaxed">
+                                {product.description}
+                            </p>
+                        </div>
 
-          <div className="flex gap-4 mt-8">
-            <button
-              className="flex-1 bg-amber-700 text-white py-2 rounded hover:bg-amber-800"
-              onClick={() => alert("Cart feature coming next")}
-            >
-              Add to Cart
-            </button>
+                        {/* Seller Info Card */}
+                        <div className="bg-stone-50 border border-stone-200 rounded-lg p-4 mb-8">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 bg-stone-200 rounded-full flex items-center justify-center text-stone-600 font-bold text-lg">
+                                    {product.seller?.fullName.charAt(0)}
+                                </div>
+                                <div>
+                                    <p className="text-xs text-stone-500">Sold by</p>
+                                    <p className="text-sm font-bold text-stone-800">{product.seller?.fullName}</p>
+                                    <p className="text-xs text-stone-400">Artisan verified</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-            <button
-              className="flex-1 border border-amber-700 text-amber-700 py-2 rounded hover:bg-amber-50"
-              onClick={handleBuyNow}
-            >
-              Buy Now
-            </button>
+                    {/* Availability & Actions */}
+                    <div className="border-t border-stone-200 pt-6">
+                        <div className="flex items-center justify-between mb-4">
+                            <span className="font-medium text-stone-700">Availability:</span>
+                            {product.stock > 0 ? (
+                                <span className="text-green-600 font-bold flex items-center gap-1">
+                                    <span className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></span>
+                                    In Stock ({product.stock} available)
+                                </span>
+                            ) : (
+                                <span className="text-red-600 font-bold">Out of Stock</span>
+                            )}
+                        </div>
 
-            <button
-              className="flex-1 bg-amber-700 text-white py-2 rounded hover:bg-amber-800"
-              onClick={handleAddToCart}
-            >
-              Add to Cart
-            </button>
-            <button
-              onClick={() => navigate("/cart")}
-              className="bg-amber-700 text-white px-4 py-2 rounded"
-            >
-              My Cart
-            </button>
-          </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleAddToCart}
+                                disabled={product.stock === 0}
+                                className="flex-1 bg-amber-50 border border-amber-700 text-amber-700 py-3 rounded-lg font-bold hover:bg-amber-700 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                🛒 Add to Cart
+                            </button>
+                            <button
+                                onClick={handleBuyNow}
+                                disabled={product.stock === 0}
+                                className="flex-1 bg-amber-700 text-white py-3 rounded-lg font-bold shadow-lg shadow-amber-700/30 hover:bg-amber-800 hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Buy Now
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
       </div>
     </div>

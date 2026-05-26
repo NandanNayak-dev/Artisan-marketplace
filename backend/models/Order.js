@@ -39,6 +39,11 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
 
+    deliveryCharge: {
+      type: Number,
+      default: 0,
+    },
+
     status: {
       type: String,
       enum: ["pending", "confirmed", "shipped", "delivered", "cancelled"],
@@ -47,10 +52,20 @@ const orderSchema = new mongoose.Schema(
 
     paymentMethod: {
       type: String,
+      enum: ["Cash on Delivery", "UPI", "Card"],
       default: "Cash on Delivery",
     },
+
+    shippingAddress: {
+      fullName: String,
+      phone: String,
+      street: String,
+      city: String,
+      state: String,
+      pincode: String,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Order", orderSchema);

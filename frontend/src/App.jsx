@@ -9,7 +9,7 @@ import AddProduct from "./pages/AddProduct";
 import ForgotPassword from "./pages/ForgotPassword";
 import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
-
+import Checkout from "./pages/Checkout";
 import MyOrders from "./pages/MyOrders";
 import SellerOrders from "./pages/SellerOrders";
 
@@ -31,6 +31,7 @@ function App() {
 
       <Route path="/my-orders" element={<MyOrders />} />
       <Route path="/seller/orders" element={<SellerOrders />} />
+      <Route path="/checkout" element={<Checkout />} />
     </Routes>
   );
 }

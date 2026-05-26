@@ -22,14 +22,17 @@ const placeOrder = async (req, res) => {
       price: item.product.price,
     }));
 
-    const totalAmount = cartItems.reduce((total, item) => {
+    const subTotal = cartItems.reduce((total, item) => {
       return total + item.product.price * item.quantity;
     }, 0);
+    const deliveryCharge = subTotal > 400 ? 50 : 0;
+    const totalAmount = subTotal + deliveryCharge;
 
     const order = await Order.create({
       buyer,
       items: orderItems,
       totalAmount,
+      deliveryCharge,
       paymentMethod: "Cash on Delivery",
     });
 
@@ -123,7 +126,8 @@ const updateOrderStatus = async (req, res) => {
 
 const buyNow = async (req, res) => {
   try {
-    const { buyer, productId, quantity } = req.body;
+    const { buyer, productId, quantity, shippingAddress, paymentMethod } =
+      req.body;
 
     if (!buyer || !productId) {
       return res.status(400).json({
@@ -147,7 +151,9 @@ const buyNow = async (req, res) => {
       });
     }
 
-    const totalAmount = product.price * orderQuantity;
+    const subTotal = product.price * orderQuantity;
+    const deliveryCharge = subTotal > 400 ? 50 : 0;
+    const totalAmount = subTotal + deliveryCharge;
 
     const order = await Order.create({
       buyer,
@@ -160,7 +166,9 @@ const buyNow = async (req, res) => {
         },
       ],
       totalAmount,
-      paymentMethod: "Cash on Delivery",
+      deliveryCharge,
+      paymentMethod,
+      shippingAddress,
     });
 
     return res.status(201).json({
