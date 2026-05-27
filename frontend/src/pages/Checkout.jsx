@@ -3,6 +3,24 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 
+const API_URL = "http://localhost:8000/api";
+
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+
+    document.body.appendChild(script);
+  });
+};
+
 function Checkout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -12,7 +30,7 @@ function Checkout() {
   const [user, setUser] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery");
-
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [address, setAddress] = useState({
     fullName: "",
     phone: "",
@@ -25,7 +43,7 @@ function Checkout() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/api/auth/me", {
+        const res = await axios.get(`${API_URL}/auth/me`, {
           withCredentials: true,
         });
 
@@ -84,25 +102,102 @@ function Checkout() {
       return;
     }
 
+    if (!user) {
+      alert("Please sign in to continue");
+      navigate("/signin");
+      return;
+    }
+
+    setIsPlacingOrder(true);
+
     try {
-      await axios.post(
-        "http://localhost:8000/api/orders/buy-now",
+      if (paymentMethod === "Cash on Delivery") {
+        await axios.post(
+          `${API_URL}/orders/buy-now`,
+          {
+            buyer: user.id,
+            productId: product._id,
+            quantity,
+            shippingAddress: address,
+            paymentMethod,
+          },
+          { withCredentials: true },
+        );
+
+        alert("Order placed successfully");
+        navigate("/my-orders");
+        return;
+      }
+
+      const scriptLoaded = await loadRazorpayScript();
+
+      if (!scriptLoaded) {
+        alert("Razorpay failed to load. Please check your internet.");
+        return;
+      }
+
+      const paymentOrderRes = await axios.post(
+        `${API_URL}/payments/create-order`,
         {
-          buyer: user.id,
           productId: product._id,
           quantity,
-          shippingAddress: address,
-          paymentMethod,
         },
-        {
-          withCredentials: true,
-        },
+        { withCredentials: true },
       );
 
-      alert("Order placed successfully");
-      navigate("/my-orders");
+      const { key, razorpayOrder } = paymentOrderRes.data;
+
+      const options = {
+        key,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        name: "Artisan Marketplace",
+        description: product.name,
+        order_id: razorpayOrder.id,
+
+        prefill: {
+          name: address.fullName,
+          email: user.email,
+          contact: address.phone,
+        },
+
+        theme: {
+          color: "#b45309",
+        },
+
+        handler: async function (response) {
+          await axios.post(
+            `${API_URL}/payments/verify`,
+            {
+              buyer: user.id,
+              productId: product._id,
+              quantity,
+              shippingAddress: address,
+              paymentMethod,
+
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            },
+            { withCredentials: true },
+          );
+
+          alert("Payment successful. Order placed.");
+          navigate("/my-orders");
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+
+      razorpay.on("payment.failed", function (response) {
+        alert(response.error.description || "Payment failed");
+      });
+
+      razorpay.open();
     } catch (error) {
       alert(error.response?.data?.message || "Failed to place order");
+    } finally {
+      setIsPlacingOrder(false);
     }
   };
 
@@ -400,11 +495,14 @@ function Checkout() {
 
             <button
               onClick={handlePlaceOrder}
-              className="w-full bg-amber-700 text-white py-3.5 rounded-lg font-bold text-lg shadow-lg shadow-amber-700/30 hover:bg-amber-800 hover:shadow-xl transition-all transform active:scale-[0.99]"
+              disabled={isPlacingOrder}
+              className="w-full bg-amber-700 text-white py-3.5 rounded-lg font-bold text-lg shadow-lg shadow-amber-700/30 hover:bg-amber-800 hover:shadow-xl transition-all transform active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {paymentMethod === "Cash on Delivery"
-                ? "Place Order"
-                : "Pay ₹" + finalAmount}
+              {isPlacingOrder
+                ? "Processing..."
+                : paymentMethod === "Cash on Delivery"
+                  ? "Place Order"
+                  : "Pay ₹" + finalAmount}
             </button>
 
             <div className="mt-4 flex items-center justify-center gap-2 text-xs text-stone-400">
