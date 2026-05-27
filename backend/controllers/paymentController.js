@@ -36,6 +36,7 @@ const createRazorpayOrder = async (req, res) => {
 
     const razorpay = getRazorpayInstance();
 
+    // Create Razorpay order
     const razorpayOrder = await razorpay.orders.create({
       amount: totalAmount * 100,
       currency: "INR",
