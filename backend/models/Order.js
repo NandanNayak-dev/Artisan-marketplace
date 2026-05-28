@@ -68,6 +68,15 @@ const orderSchema = new mongoose.Schema(
       state: String,
       pincode: String,
     },
+    refundStatus: {
+      type: String,
+      enum: ["not_applicable", "pending", "processed", "failed"],
+      default: "not_applicable",
+    },
+
+    razorpayRefundId: String,
+    cancelReason: String,
+    cancelledAt: Date,
   },
   { timestamps: true },
 );

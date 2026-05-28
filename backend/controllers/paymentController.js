@@ -115,6 +115,9 @@ const verifyPaymentAndCreateOrder = async (req, res) => {
       razorpaySignature: razorpay_signature,
     });
 
+    product.stock -= orderQuantity;
+    await product.save();
+
     return res.status(201).json({
       message: "Payment verified and order placed",
       order,

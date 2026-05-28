@@ -1,6 +1,105 @@
 const Order = require("../models/Order");
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
+
+const Razorpay = require("razorpay");
+const restoreOrderStock = async (order) => {
+  for (const item of order.items) {
+    await Product.findByIdAndUpdate(item.product, {
+      $inc: { stock: item.quantity },
+    });
+  }
+};
+
+
+const getRazorpayInstance = () => {
+  if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    throw new Error("Razorpay keys are missing in .env");
+  }
+
+  return new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET,
+  });
+};
+
+const cancelOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { reason } = req.body;
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.status === "delivered") {
+      return res.status(400).json({
+        message: "Delivered orders cannot be cancelled",
+      });
+    }
+
+    if (order.status === "cancelled") {
+      return res.status(400).json({
+        message: "Order is already cancelled",
+      });
+    }
+
+    if (
+      order.paymentStatus === "paid" &&
+      order.razorpayPaymentId &&
+      order.paymentMethod !== "Cash on Delivery"
+    ) {
+      const razorpay = getRazorpayInstance();
+
+      const refund = await razorpay.payments.refund(order.razorpayPaymentId, {
+        amount: order.totalAmount * 100,
+        speed: "normal",
+        notes: {
+          orderId: order._id.toString(),
+          reason: reason || "Order cancelled by buyer",
+        },
+        receipt: `refund_${order._id}`,
+      });
+
+      order.status = "cancelled";
+      order.paymentStatus = "refunded";
+      order.refundStatus = "processed";
+      order.razorpayRefundId = refund.id;
+      order.cancelReason = reason || "Order cancelled by buyer";
+      order.cancelledAt = new Date();
+
+      await order.save();
+
+      await restoreOrderStock(order);
+      return res.status(200).json({
+        message: "Order cancelled and refund initiated",
+        order,
+        refund,
+      });
+    }
+
+    order.status = "cancelled";
+    order.refundStatus = "not_applicable";
+    order.cancelReason = reason || "Order cancelled by buyer";
+    order.cancelledAt = new Date();
+
+    await order.save();
+
+    await restoreOrderStock(order);
+
+    return res.status(200).json({
+      message: "Order cancelled successfully",
+      order,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to cancel order",
+      error: error.message,
+    });
+  }
+};
 const placeOrder = async (req, res) => {
   try {
     const { buyer } = req.body;
@@ -171,6 +270,9 @@ const buyNow = async (req, res) => {
       shippingAddress,
     });
 
+    product.stock -= orderQuantity;
+    await product.save();
+
     return res.status(201).json({
       message: "Order placed successfully",
       order,
@@ -189,4 +291,5 @@ module.exports = {
   getSellerOrders,
   updateOrderStatus,
   buyNow,
+  cancelOrder,
 };

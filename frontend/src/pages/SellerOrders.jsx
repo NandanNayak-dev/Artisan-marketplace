@@ -6,12 +6,27 @@ function SellerOrders() {
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
 
+  const getPaymentStatusColor = (paymentStatus) => {
+    switch (paymentStatus?.toLowerCase()) {
+      case "paid":
+        return "bg-green-100 text-green-700 border-green-200";
+      case "pending":
+        return "bg-amber-100 text-amber-700 border-amber-200";
+      case "failed":
+        return "bg-red-100 text-red-700 border-red-200";
+      case "refunded":
+        return "bg-blue-100 text-blue-700 border-blue-200";
+      default:
+        return "bg-stone-100 text-stone-700 border-stone-200";
+    }
+  };
+
   const fetchSellerOrders = async (sellerId) => {
     const res = await axios.get(
       `http://localhost:8000/api/orders/seller/${sellerId}`,
       {
         withCredentials: true,
-      }
+      },
     );
 
     setOrders(res.data.orders);
@@ -39,7 +54,7 @@ function SellerOrders() {
       await axios.put(
         `http://localhost:8000/api/orders/${orderId}/status`,
         { status },
-        { withCredentials: true }
+        { withCredentials: true },
       );
 
       fetchSellerOrders(user.id);
@@ -69,6 +84,20 @@ function SellerOrders() {
                     <p className="text-sm text-gray-600">
                       Buyer: {order.buyer?.fullName}
                     </p>
+
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${getPaymentStatusColor(
+                          order.paymentStatus,
+                        )}`}
+                      >
+                        Payment: {order.paymentStatus || "pending"}
+                      </span>
+
+                      <span className="text-xs text-gray-500">
+                        Method: {order.paymentMethod}
+                      </span>
+                    </div>
                   </div>
 
                   <select

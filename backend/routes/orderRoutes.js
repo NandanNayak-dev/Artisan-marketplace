@@ -5,6 +5,7 @@ const {
   getSellerOrders,
   updateOrderStatus,
   buyNow,
+  cancelOrder,
 } = require("../controllers/orderController");
 
 const router = express.Router();
@@ -14,4 +15,5 @@ router.get("/buyer/:buyerId", getBuyerOrders);
 router.get("/seller/:sellerId", getSellerOrders);
 router.put("/:orderId/status", updateOrderStatus);
 router.post("/buy-now", buyNow);
+router.put("/:orderId/cancel", cancelOrder);
 module.exports = router;
