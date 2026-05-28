@@ -9,6 +9,9 @@ function BuyerDashboard() {
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [sortOption, setSortOption] = useState("relevance");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
 
@@ -22,7 +25,23 @@ function BuyerDashboard() {
       product.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory =
       selectedCategory === "All" || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
+    const matchesMinPrice =
+      minPrice === "" || Number(product.price) >= Number(minPrice);
+    const matchesMaxPrice =
+      maxPrice === "" || Number(product.price) <= Number(maxPrice);
+
+    return matchesSearch && matchesCategory && matchesMinPrice && matchesMaxPrice;
+  }).sort((a, b) => {
+    switch (sortOption) {
+      case "price-low":
+        return Number(a.price) - Number(b.price);
+      case "price-high":
+        return Number(b.price) - Number(a.price);
+      case "latest":
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      default:
+        return 0;
+    }
   });
 
   useEffect(() => {
@@ -280,12 +299,46 @@ function BuyerDashboard() {
           </p>
           <div className="flex items-center gap-2 text-sm">
             <span className="text-stone-500">Sort by:</span>
-            <select className="border-none bg-transparent text-amber-700 font-bold cursor-pointer focus:ring-0">
-              <option>Relevance</option>
-              <option>Price (Low to High)</option>
-              <option>Price (High to Low)</option>
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+              className="border-none bg-transparent text-amber-700 font-bold cursor-pointer focus:ring-0"
+            >
+              <option value="relevance">Relevance</option>
+              <option value="latest">Latest</option>
+              <option value="price-low">Price (Low to High)</option>
+              <option value="price-high">Price (High to Low)</option>
             </select>
           </div>
+        </div>
+
+        <div className="mb-6 grid grid-cols-1 gap-3 rounded-lg border border-stone-200 bg-white p-4 sm:grid-cols-[1fr_1fr_auto]">
+          <input
+            type="number"
+            placeholder="Min price"
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+            className="rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600"
+          />
+          <input
+            type="number"
+            placeholder="Max price"
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+            className="rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600"
+          />
+          <button
+            onClick={() => {
+              setSearchQuery("");
+              setSelectedCategory("All");
+              setSortOption("relevance");
+              setMinPrice("");
+              setMaxPrice("");
+            }}
+            className="rounded-md border border-stone-300 px-4 py-2 text-sm font-bold text-stone-700 hover:bg-stone-50"
+          >
+            Reset Filters
+          </button>
         </div>
 
         {/* Product Grid */}

@@ -67,6 +67,48 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, price, category, stock } = req.body;
+
+    const updateData = {};
+
+    if (name) updateData.name = name;
+    if (description) updateData.description = description;
+    if (price !== undefined) updateData.price = Number(price);
+    if (category) updateData.category = category;
+    if (stock !== undefined) updateData.stock = Number(stock);
+
+    if (req.file) {
+      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        folder: "artisan-products",
+      });
+
+      updateData.image = uploadResult.secure_url;
+    }
+
+    const product = await Product.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    }).populate("seller", "fullName email");
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    return res.status(200).json({
+      message: "Product updated successfully",
+      product,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to update product",
+      error: error.message,
+    });
+  }
+};
+
 const getProductById = async (req, res) => {
   try{
     const { id } = req.params;
@@ -82,4 +124,10 @@ const getProductById = async (req, res) => {
     return res.status(500).json({ message: "Failed to fetch product", error });
   }
 }
-module.exports = { createProduct, getAllProducts, deleteProduct, getProductById };
+module.exports = {
+  createProduct,
+  getAllProducts,
+  deleteProduct,
+  getProductById,
+  updateProduct,
+};

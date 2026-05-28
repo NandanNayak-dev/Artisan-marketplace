@@ -166,6 +166,22 @@ const getBuyerOrders = async (req, res) => {
   }
 };
 
+const getAllOrders = async (req, res) => {
+  try {
+    const orders = await Order.find()
+      .populate("buyer", "fullName email role")
+      .populate("items.product")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({ orders });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Failed to fetch orders",
+      error: error.message,
+    });
+  }
+};
+
 const getSellerOrders = async (req, res) => {
   try {
     const { sellerId } = req.params;
@@ -201,15 +217,46 @@ const updateOrderStatus = async (req, res) => {
       return res.status(400).json({ message: "Invalid order status" });
     }
 
-    const order = await Order.findByIdAndUpdate(
-      orderId,
-      { status },
-      { new: true },
-    );
-
+    const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: "Order not found" });
     }
+
+    if (order.status === "cancelled") {
+      return res.status(400).json({
+        message: "Cancelled orders cannot be updated",
+      });
+    }
+
+    if (order.status === "delivered" && status !== "delivered") {
+      return res.status(400).json({
+        message: "Delivered orders cannot be moved backward",
+      });
+    }
+
+    if (status === "cancelled") {
+      return res.status(400).json({
+        message: "Use the cancel order action to cancel and process refunds",
+      });
+    }
+
+    const statusOrder = ["pending", "confirmed", "shipped", "delivered"];
+    const currentIndex = statusOrder.indexOf(order.status);
+    const nextIndex = statusOrder.indexOf(status);
+
+    if (nextIndex < currentIndex) {
+      return res.status(400).json({
+        message: "Order status cannot be moved backward",
+      });
+    }
+
+    order.status = status;
+
+    if (status === "delivered" && order.paymentMethod === "Cash on Delivery") {
+      order.paymentStatus = "paid";
+    }
+
+    await order.save();
 
     return res.status(200).json({
       message: "Order status updated",
@@ -289,6 +336,7 @@ module.exports = {
   placeOrder,
   getBuyerOrders,
   getSellerOrders,
+  getAllOrders,
   updateOrderStatus,
   buyNow,
   cancelOrder,

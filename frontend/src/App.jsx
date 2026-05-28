@@ -14,8 +14,6 @@ import MyOrders from "./pages/MyOrders";
 import SellerOrders from "./pages/SellerOrders";
 
 function App() {
-  const userData = null;
-
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/signin" replace />} />

@@ -16,6 +16,10 @@ const signUp = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
+    if (!["buyer", "seller"].includes(role)) {
+      return res.status(400).json({ message: "Invalid account type" });
+    }
+
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {

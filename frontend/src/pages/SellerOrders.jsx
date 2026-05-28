@@ -1,25 +1,12 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 
 function SellerOrders() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [orders, setOrders] = useState([]);
-
-  const getPaymentStatusColor = (paymentStatus) => {
-    switch (paymentStatus?.toLowerCase()) {
-      case "paid":
-        return "bg-green-100 text-green-700 border-green-200";
-      case "pending":
-        return "bg-amber-100 text-amber-700 border-amber-200";
-      case "failed":
-        return "bg-red-100 text-red-700 border-red-200";
-      case "refunded":
-        return "bg-blue-100 text-blue-700 border-blue-200";
-      default:
-        return "bg-stone-100 text-stone-700 border-stone-200";
-    }
-  };
 
   const fetchSellerOrders = async (sellerId) => {
     const res = await axios.get(
@@ -39,15 +26,21 @@ function SellerOrders() {
           withCredentials: true,
         });
 
+        if (userRes.data.user.role !== "seller") {
+          navigate("/signin");
+          return;
+        }
+
         setUser(userRes.data.user);
         await fetchSellerOrders(userRes.data.user.id);
       } catch (error) {
         console.log(error);
+        navigate("/signin");
       }
     };
 
     loadOrders();
-  }, []);
+  }, [navigate]);
 
   const updateStatus = async (orderId, status) => {
     try {
@@ -63,85 +56,199 @@ function SellerOrders() {
     }
   };
 
+  const normalizeStatus = (status) => status?.toString().trim().toLowerCase();
+  const statusSteps = ["pending", "confirmed", "shipped", "delivered"];
+
+  const getAllowedStatusOptions = (status) => {
+    const normalizedStatus = normalizeStatus(status);
+
+    if (["cancelled", "delivered"].includes(normalizedStatus)) {
+      return [normalizedStatus];
+    }
+
+    const currentIndex = statusSteps.indexOf(normalizedStatus);
+
+    return statusSteps.filter((_, index) => index >= currentIndex);
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(Number(amount) || 0);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "Unknown";
+
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const getPaymentStatusColor = (paymentStatus) => {
+    switch (paymentStatus?.toLowerCase()) {
+      case "paid":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "refunded":
+        return "bg-blue-50 text-blue-700 border-blue-200";
+      case "failed":
+        return "bg-red-50 text-red-700 border-red-200";
+      default:
+        return "bg-amber-50 text-amber-700 border-amber-200";
+    }
+  };
+
+  const getOrderStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "delivered":
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
+      case "shipped":
+        return "bg-sky-50 text-sky-700 border-sky-200";
+      case "cancelled":
+        return "bg-red-50 text-red-700 border-red-200";
+      default:
+        return "bg-amber-50 text-amber-700 border-amber-200";
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#FAF9F6]">
+    <div className="min-h-screen bg-[#faf9f6] pb-12">
       <Navbar title="Seller Orders" user={user} />
 
-      <div className="max-w-5xl mx-auto p-6">
-        <h1 className="text-2xl font-bold text-amber-700 mb-6">
-          Seller Orders
-        </h1>
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="mb-8 flex flex-col gap-4 border-b border-stone-200 pb-6 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-amber-700">
+              Order management
+            </p>
+            <h1 className="mt-2 text-3xl font-bold text-stone-900">
+              Seller Orders
+            </h1>
+            <p className="mt-2 text-sm text-stone-600">
+              Review buyer orders, payment status, and delivery progress.
+            </p>
+          </div>
+
+          <button
+            onClick={() => navigate("/seller/dashboard")}
+            className="inline-flex h-11 items-center justify-center rounded-lg border border-stone-300 bg-white px-5 text-sm font-bold text-stone-700 shadow-sm transition hover:border-amber-300 hover:bg-amber-50 hover:text-amber-900"
+          >
+            Back to Dashboard
+          </button>
+        </div>
 
         {orders.length === 0 ? (
-          <p className="text-gray-600">No orders yet.</p>
+          <div className="rounded-xl border border-dashed border-stone-300 bg-white p-12 text-center shadow-sm">
+            <h2 className="text-xl font-bold text-stone-900">No orders yet</h2>
+            <p className="mt-2 text-sm text-stone-500">
+              Buyer orders for your products will appear here.
+            </p>
+          </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-5">
             {orders.map((order) => (
-              <div key={order._id} className="bg-white rounded shadow p-5">
-                <div className="flex justify-between mb-4">
+              <article
+                key={order._id}
+                className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm"
+              >
+                <div className="flex flex-col gap-4 border-b border-stone-200 bg-stone-50 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <p className="font-semibold">Order ID: {order._id}</p>
-                    <p className="text-sm text-gray-600">
-                      Buyer: {order.buyer?.fullName}
+                    <p className="text-sm font-bold text-stone-900">
+                      Order #{order._id.slice(-10).toUpperCase()}
                     </p>
-
-                    <div className="flex flex-wrap items-center gap-2 mt-2">
-                      <span
-                        className={`inline-block px-3 py-1 rounded-full text-xs font-bold border ${getPaymentStatusColor(
-                          order.paymentStatus,
-                        )}`}
-                      >
-                        Payment: {order.paymentStatus || "pending"}
-                      </span>
-
-                      <span className="text-xs text-gray-500">
-                        Method: {order.paymentMethod}
-                      </span>
-                    </div>
+                    <p className="mt-1 text-xs text-stone-500">
+                      Buyer: {order.buyer?.fullName || "Buyer"} | Placed on{" "}
+                      {formatDate(order.createdAt)}
+                    </p>
                   </div>
 
-                  <select
-                    value={order.status}
-                    onChange={(e) => updateStatus(order._id, e.target.value)}
-                    className="border rounded px-3 py-2"
-                  >
-                    <option value="pending">pending</option>
-                    <option value="confirmed">confirmed</option>
-                    <option value="shipped">shipped</option>
-                    <option value="delivered">delivered</option>
-                    <option value="cancelled">cancelled</option>
-                  </select>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={`rounded-full border px-3 py-1 text-xs font-bold ${getOrderStatusColor(
+                        order.status,
+                      )}`}
+                    >
+                      {order.status}
+                    </span>
+                    <span
+                      className={`rounded-full border px-3 py-1 text-xs font-bold ${getPaymentStatusColor(
+                        order.paymentStatus,
+                      )}`}
+                    >
+                      Payment: {order.paymentStatus || "pending"}
+                    </span>
+                    <span className="text-xs font-medium text-stone-500">
+                      {order.paymentMethod}
+                    </span>
+                  </div>
                 </div>
 
-                {order.items
-                  .filter((item) => item.seller === user?.id)
-                  .map((item) => (
-                    <div
-                      key={item._id}
-                      className="flex gap-4 border-t py-4 items-center"
+                <div className="px-5 py-5">
+                  <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm font-bold text-stone-900">
+                      Total: {formatCurrency(order.totalAmount)}
+                    </p>
+
+                    <select
+                      value={order.status}
+                      onChange={(e) => updateStatus(order._id, e.target.value)}
+                      disabled={["cancelled", "delivered"].includes(
+                        normalizeStatus(order.status),
+                      )}
+                      className="h-10 rounded-lg border border-stone-300 bg-white px-3 text-sm font-medium text-stone-700 outline-none transition focus:border-amber-600 disabled:cursor-not-allowed disabled:bg-stone-100 disabled:text-stone-400"
                     >
-                      <img
-                        src={item.product.image}
-                        alt={item.product.name}
-                        className="w-20 h-20 object-cover rounded"
-                      />
+                      {getAllowedStatusOptions(order.status).map((status) => (
+                        <option key={status} value={status}>
+                          {status}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                      <div className="flex-1">
-                        <h2 className="font-bold">{item.product.name}</h2>
-                        <p className="text-gray-600">Qty: {item.quantity}</p>
-                        <p className="text-gray-600">Price: ₹{item.price}</p>
-                      </div>
+                  <div className="divide-y divide-stone-100">
+                    {order.items
+                      .filter((item) => item.seller === user?.id)
+                      .map((item) => (
+                        <div
+                          key={item._id}
+                          className="flex gap-4 py-4 first:pt-0 last:pb-0"
+                        >
+                          <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-stone-200 bg-stone-100">
+                            <img
+                              src={item.product?.image}
+                              alt={item.product?.name || "Product"}
+                              className="h-full w-full object-cover"
+                            />
+                          </div>
 
-                      <p className="font-semibold">
-                        ₹{item.price * item.quantity}
-                      </p>
-                    </div>
-                  ))}
-              </div>
+                          <div className="min-w-0 flex-1">
+                            <h2 className="truncate font-bold text-stone-900">
+                              {item.product?.name || "Product unavailable"}
+                            </h2>
+                            <p className="mt-1 text-sm text-stone-500">
+                              Qty: {item.quantity}
+                            </p>
+                            <p className="mt-1 text-sm text-stone-500">
+                              Price: {formatCurrency(item.price)}
+                            </p>
+                          </div>
+
+                          <p className="hidden font-bold text-stone-900 sm:block">
+                            {formatCurrency(item.price * item.quantity)}
+                          </p>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              </article>
             ))}
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
