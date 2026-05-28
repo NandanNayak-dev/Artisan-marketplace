@@ -32,6 +32,11 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
 
+    behindTheScenesVideo: {
+      type: String,
+      required: true,
+    },
+
     seller: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

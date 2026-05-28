@@ -15,12 +15,24 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ message: "All fields are required" });
     }
 
-    if(!req.file){
+    const imageFile = req.files?.image?.[0];
+    const videoFile = req.files?.behindTheScenesVideo?.[0];
+
+    if(!imageFile){
       return res.status(400).json({ message: "Product image is required" });
     }
 
-     const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+    if(!videoFile){
+      return res.status(400).json({ message: "Behind the scenes video is required" });
+    }
+
+     const uploadResult = await cloudinary.uploader.upload(imageFile.path, {
       folder: "artisan-products",
+    });
+
+    const videoUploadResult = await cloudinary.uploader.upload(videoFile.path, {
+      folder: "artisan-product-videos",
+      resource_type: "video",
     });
 
     const product = await Product.create({
@@ -31,6 +43,7 @@ const createProduct = async (req, res) => {
       stock,
       seller,
       image: uploadResult.secure_url,
+      behindTheScenesVideo: videoUploadResult.secure_url,
     });
     return res
       .status(201)
@@ -80,12 +93,24 @@ const updateProduct = async (req, res) => {
     if (category) updateData.category = category;
     if (stock !== undefined) updateData.stock = Number(stock);
 
-    if (req.file) {
-      const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+    const imageFile = req.files?.image?.[0];
+    const videoFile = req.files?.behindTheScenesVideo?.[0];
+
+    if (imageFile) {
+      const uploadResult = await cloudinary.uploader.upload(imageFile.path, {
         folder: "artisan-products",
       });
 
       updateData.image = uploadResult.secure_url;
+    }
+
+    if (videoFile) {
+      const videoUploadResult = await cloudinary.uploader.upload(videoFile.path, {
+        folder: "artisan-product-videos",
+        resource_type: "video",
+      });
+
+      updateData.behindTheScenesVideo = videoUploadResult.secure_url;
     }
 
     const product = await Product.findByIdAndUpdate(id, updateData, {

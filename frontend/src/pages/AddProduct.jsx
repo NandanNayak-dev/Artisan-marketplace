@@ -16,6 +16,7 @@ function AddProduct() {
   });
 
   const [image, setImage] = useState(null);
+  const [behindTheScenesVideo, setBehindTheScenesVideo] = useState(null);
 
   useEffect(() => {
     const checkSeller = async () => {
@@ -49,11 +50,20 @@ function AddProduct() {
     setImage(e.target.files[0]);
   };
 
+  const handleVideoChange = (e) => {
+    setBehindTheScenesVideo(e.target.files[0]);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!image) {
       alert("Please select a product image");
+      return;
+    }
+
+    if (!behindTheScenesVideo) {
+      alert("Please select a behind the scenes video");
       return;
     }
 
@@ -67,6 +77,7 @@ function AddProduct() {
       data.append("stock", Number(formData.stock));
       data.append("seller", user.id);
       data.append("image", image);
+      data.append("behindTheScenesVideo", behindTheScenesVideo);
 
       await axios.post("http://localhost:8000/api/products", data, {
         withCredentials: true,
@@ -129,10 +140,10 @@ function AddProduct() {
 
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-md">
                     <p className="text-sm font-semibold text-amber-100">
-                      Good quality image
+                      Good image and video
                     </p>
                     <p className="mt-1 text-sm leading-6 text-stone-300">
-                      Upload a bright, clean image that shows your handmade product clearly.
+                      Upload a bright image and a short making video so buyers can see the effort behind the price.
                     </p>
                   </div>
 
@@ -256,6 +267,25 @@ function AddProduct() {
                     />
                     <p className="mt-3 text-xs leading-5 text-stone-500">
                       Upload a clear JPG, PNG, or WebP image that showcases your product well.
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-stone-700">
+                    Behind the Scenes Video
+                  </label>
+                  <div className="rounded-2xl border border-dashed border-stone-300 bg-stone-50 px-4 py-5 transition-all hover:border-amber-300 hover:bg-amber-50/40">
+                    <input
+                      type="file"
+                      name="behindTheScenesVideo"
+                      accept="video/*"
+                      onChange={handleVideoChange}
+                      className="block w-full text-sm text-stone-600 file:mr-4 file:rounded-lg file:border-0 file:bg-amber-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-amber-800"
+                      required
+                    />
+                    <p className="mt-3 text-xs leading-5 text-stone-500">
+                      Upload a short video showing how the product was made. This helps buyers understand the craftsmanship and value.
                     </p>
                   </div>
                 </div>
