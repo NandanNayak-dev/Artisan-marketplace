@@ -13,6 +13,8 @@ function AddProduct() {
     price: "",
     category: "",
     stock: "",
+    originPlace: "",
+    originState: "",
   });
 
   const [image, setImage] = useState(null);
@@ -76,6 +78,8 @@ function AddProduct() {
       data.append("category", formData.category);
       data.append("stock", Number(formData.stock));
       data.append("seller", user.id);
+      data.append("originPlace", formData.originPlace);
+      data.append("originState", formData.originState);
       data.append("image", image);
       data.append("behindTheScenesVideo", behindTheScenesVideo);
 
@@ -250,6 +254,34 @@ function AddProduct() {
                     className="w-full rounded-xl border border-stone-300 bg-stone-50 px-4 py-3 text-stone-900 outline-none transition-all placeholder:text-stone-400 focus:border-amber-700 focus:bg-white focus:ring-4 focus:ring-amber-700/10"
                     required
                   />
+                </div>
+
+                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-stone-700">
+                      Place of Origin
+                    </label>
+                    <input
+                      name="originPlace"
+                      placeholder="e.g. Kutch"
+                      value={formData.originPlace}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-stone-300 bg-stone-50 px-4 py-3 text-stone-900 outline-none transition-all placeholder:text-stone-400 focus:border-amber-700 focus:bg-white focus:ring-4 focus:ring-amber-700/10"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-stone-700">
+                      State / Region
+                    </label>
+                    <input
+                      name="originState"
+                      placeholder="e.g. Gujarat"
+                      value={formData.originState}
+                      onChange={handleChange}
+                      className="w-full rounded-xl border border-stone-300 bg-stone-50 px-4 py-3 text-stone-900 outline-none transition-all placeholder:text-stone-400 focus:border-amber-700 focus:bg-white focus:ring-4 focus:ring-amber-700/10"
+                    />
+                  </div>
                 </div>
 
                 <div>

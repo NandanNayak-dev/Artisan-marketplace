@@ -11,6 +11,8 @@ function ProductDetails() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showBehindScenes, setShowBehindScenes] = useState(false);
+  const [popularItems, setPopularItems] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     const fetchProductDetails = async () => {
@@ -118,6 +120,38 @@ function ProductDetails() {
       navigate("/my-orders");
     } catch (error) {
       alert(error.response?.data?.message || "Failed to place order");
+    }
+  };
+
+  const getProductLocation = () => {
+    return [product?.originPlace, product?.originState]
+      .filter(Boolean)
+      .join(", ");
+  };
+
+  const handleGetPopularItems = async () => {
+    const location = getProductLocation();
+
+    if (!location) {
+      alert("Origin location is not available for this product");
+      return;
+    }
+
+    setAiLoading(true);
+    setPopularItems("");
+
+    try {
+      const res = await axios.post(
+        "http://localhost:8000/api/ai/popular-handicrafts",
+        { location },
+        { withCredentials: true },
+      );
+
+      setPopularItems(res.data.suggestion);
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to generate suggestions");
+    } finally {
+      setAiLoading(false);
     }
   };
 
@@ -274,6 +308,45 @@ function ProductDetails() {
                     </button>
                   </div>
                 )}
+
+                <div className="mb-8 rounded-lg border border-stone-200 bg-white p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-widest text-amber-700">
+                        Craft Origin Discovery
+                      </p>
+                      <h3 className="mt-1 text-lg font-bold text-stone-800">
+                        Other popular items of this location
+                      </h3>
+                      <p className="mt-2 text-sm leading-relaxed text-stone-600">
+                        {getProductLocation()
+                          ? `Explore other handicrafts famous in ${getProductLocation()}.`
+                          : "Add this product's origin place and state to discover local craft suggestions."}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleGetPopularItems}
+                    disabled={aiLoading || !getProductLocation()}
+                    className="mt-4 w-full rounded-lg bg-stone-900 px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-stone-800 disabled:cursor-not-allowed disabled:bg-stone-300"
+                  >
+                    {aiLoading
+                      ? "Finding local crafts..."
+                      : "Other Popular Items of This Location"}
+                  </button>
+
+                  {popularItems && (
+                    <div className="mt-5 rounded-lg border border-amber-200 bg-amber-50 p-4">
+                      <h4 className="mb-3 text-sm font-bold uppercase tracking-widest text-amber-800">
+                        Popular handicrafts from {getProductLocation()}
+                      </h4>
+                      <pre className="whitespace-pre-wrap font-sans text-sm leading-6 text-stone-700">
+                        {popularItems}
+                      </pre>
+                    </div>
+                  )}
+                </div>
 
                 {/* Seller Info Card */}
                 <div className="bg-stone-50 border border-stone-200 rounded-lg p-4 mb-8">

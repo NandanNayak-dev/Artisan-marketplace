@@ -37,6 +37,16 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
 
+    originPlace: {
+      type: String,
+      default: "",
+    },
+
+    originState: {
+      type: String,
+      default: "",
+    },
+
     seller: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

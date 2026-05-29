@@ -2,7 +2,7 @@ const Product = require("../models/Product");
 const cloudinary = require("../config/cloudinary");
 const createProduct = async (req, res) => {
   try {
-    const { name, description, price, category, stock, seller } =
+    const { name, description, price, category, stock, seller, originPlace, originState } =
       req.body;
     if (
       !name ||
@@ -44,6 +44,8 @@ const createProduct = async (req, res) => {
       seller,
       image: uploadResult.secure_url,
       behindTheScenesVideo: videoUploadResult.secure_url,
+      originPlace,
+      originState,
     });
     return res
       .status(201)
@@ -83,7 +85,7 @@ const deleteProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, price, category, stock } = req.body;
+    const { name, description, price, category, stock, originPlace, originState } = req.body;
 
     const updateData = {};
 
@@ -92,6 +94,8 @@ const updateProduct = async (req, res) => {
     if (price !== undefined) updateData.price = Number(price);
     if (category) updateData.category = category;
     if (stock !== undefined) updateData.stock = Number(stock);
+    if (originPlace !== undefined) updateData.originPlace = originPlace;
+    if (originState !== undefined) updateData.originState = originState;
 
     const imageFile = req.files?.image?.[0];
     const videoFile = req.files?.behindTheScenesVideo?.[0];
