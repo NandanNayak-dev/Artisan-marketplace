@@ -19,6 +19,7 @@ function AddProduct() {
 
   const [image, setImage] = useState(null);
   const [behindTheScenesVideo, setBehindTheScenesVideo] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const checkSeller = async () => {
@@ -33,7 +34,7 @@ function AddProduct() {
         }
 
         setUser(res.data.user);
-      } catch (error) {
+      } catch {
         navigate("/signin");
       }
     };
@@ -59,6 +60,8 @@ function AddProduct() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (isSubmitting) return;
+
     if (!image) {
       alert("Please select a product image");
       return;
@@ -70,6 +73,7 @@ function AddProduct() {
     }
 
     try {
+      setIsSubmitting(true);
       const data = new FormData();
 
       data.append("name", formData.name);
@@ -95,6 +99,8 @@ function AddProduct() {
     } catch (error) {
       console.log(error);
       alert(error.response?.data?.message || "Failed to add product");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -324,9 +330,17 @@ function AddProduct() {
 
                 <button
                   type="submit"
-                  className="w-full rounded-xl bg-gradient-to-r from-amber-700 to-orange-800 py-3.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:from-amber-800 hover:to-orange-900 hover:shadow-md"
+                  disabled={isSubmitting}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-700 to-orange-800 py-3.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:from-amber-800 hover:to-orange-900 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-70"
                 >
-                  Add Product
+                  {isSubmitting ? (
+                    <>
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                      Adding Product...
+                    </>
+                  ) : (
+                    "Add Product"
+                  )}
                 </button>
               </form>
             </div>

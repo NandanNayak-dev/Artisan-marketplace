@@ -97,30 +97,18 @@ function ProductDetails() {
     }
   };
 
-  const handleBuyNow = async () => {
+  const handleBuyNow = () => {
     if (!user) {
       alert("Please login first");
       navigate("/signin");
       return;
     }
-    try {
-      await axios.post(
-        "http://localhost:8000/api/orders/buy-now",
-        {
-          buyer: user.id,
-          productId: product._id,
-          quantity: 1,
-        },
-        {
-          withCredentials: true,
-        },
-      );
 
-      alert("Order placed successfully");
-      navigate("/my-orders");
-    } catch (error) {
-      alert(error.response?.data?.message || "Failed to place order");
-    }
+    navigate("/checkout", {
+      state: {
+        product,
+      },
+    });
   };
 
   const getProductLocation = () => {
