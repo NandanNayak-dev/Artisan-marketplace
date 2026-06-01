@@ -48,7 +48,7 @@ function Cart() {
         return;
       }
 
-      await axios.post(
+      const orderRes = await axios.post(
         "http://localhost:8000/api/orders",
         {
           buyer: user.id,
@@ -58,7 +58,12 @@ function Cart() {
         }
       );
 
-      alert("Order placed successfully");
+      const rewardCoupon = orderRes.data.rewardCoupon;
+      alert(
+        rewardCoupon
+          ? `Order placed successfully. You earned a 10% discount token: ${rewardCoupon.code}`
+          : "Order placed successfully",
+      );
       setCartItems([]);
     } catch (error) {
       alert(error.response?.data?.message || "Failed to place order");

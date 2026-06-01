@@ -12,6 +12,7 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import MyOrders from "./pages/MyOrders";
 import SellerOrders from "./pages/SellerOrders";
+import MyRewards from "./pages/MyRewards";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
       <Route path="/my-orders" element={<MyOrders />} />
       <Route path="/seller/orders" element={<SellerOrders />} />
       <Route path="/checkout" element={<Checkout />} />
+      <Route path="/my-rewards" element={<MyRewards />} />
     </Routes>
   );
 }

@@ -31,6 +31,10 @@ function Checkout() {
   const [quantity, setQuantity] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery");
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponId, setCouponId] = useState(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [couponMessage, setCouponMessage] = useState("");
   const [address, setAddress] = useState({
     fullName: "",
     phone: "",
@@ -55,6 +59,12 @@ function Checkout() {
 
     fetchUser();
   }, [navigate]);
+
+  useEffect(() => {
+    setCouponId(null);
+    setDiscountAmount(0);
+    setCouponMessage("");
+  }, [quantity, checkoutData?.product?._id]);
 
   if (!checkoutData || !checkoutData.product) {
     return (
@@ -81,12 +91,47 @@ function Checkout() {
   const totalAmount = product.price * quantity;
   const deliveryCharge = totalAmount > 400 ? 50 : 0;
   const finalAmount = totalAmount + deliveryCharge;
+  const payableAmount = finalAmount - discountAmount;
 
   const handleAddressChange = (e) => {
     setAddress({
       ...address,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponMessage("Please enter a discount token");
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `${API_URL}/coupons/validate`,
+        {
+          code: couponCode,
+          totalAmount: finalAmount,
+        },
+        { withCredentials: true },
+      );
+
+      setCouponId(res.data.couponId);
+      setDiscountAmount(res.data.discountAmount);
+      setCouponMessage(res.data.message);
+    } catch (error) {
+      setCouponId(null);
+      setDiscountAmount(0);
+      setCouponMessage(error.response?.data?.message || "Failed to apply token");
+    }
+  };
+
+  const getRewardMessage = (rewardCoupon) => {
+    if (!rewardCoupon) {
+      return "Order placed successfully";
+    }
+
+    return `Order placed successfully. You earned a 10% discount token: ${rewardCoupon.code}`;
   };
 
   const handlePlaceOrder = async () => {
@@ -112,7 +157,7 @@ function Checkout() {
 
     try {
       if (paymentMethod === "Cash on Delivery") {
-        await axios.post(
+        const orderRes = await axios.post(
           `${API_URL}/orders/buy-now`,
           {
             buyer: user.id,
@@ -120,11 +165,12 @@ function Checkout() {
             quantity,
             shippingAddress: address,
             paymentMethod,
+            couponId,
           },
           { withCredentials: true },
         );
 
-        alert("Order placed successfully");
+        alert(getRewardMessage(orderRes.data.rewardCoupon));
         navigate("/my-orders");
         return;
       }
@@ -141,6 +187,8 @@ function Checkout() {
         {
           productId: product._id,
           quantity,
+          buyer: user.id,
+          couponId,
         },
         { withCredentials: true },
       );
@@ -166,7 +214,7 @@ function Checkout() {
         },
 
         handler: async function (response) {
-          await axios.post(
+          const verifyRes = await axios.post(
             `${API_URL}/payments/verify`,
             {
               buyer: user.id,
@@ -174,6 +222,7 @@ function Checkout() {
               quantity,
               shippingAddress: address,
               paymentMethod,
+              couponId,
 
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
@@ -182,7 +231,7 @@ function Checkout() {
             { withCredentials: true },
           );
 
-          alert("Payment successful. Order placed.");
+          alert(getRewardMessage(verifyRes.data.rewardCoupon));
           navigate("/my-orders");
         },
       };
@@ -486,11 +535,41 @@ function Checkout() {
                   ₹50 delivery charge applies for orders above ₹400.
                 </p>
               )}
+              <div className="rounded-lg border border-amber-100 bg-amber-50 p-3">
+                <label className="block text-xs font-semibold uppercase tracking-[0.16em] text-amber-900 mb-2">
+                  Discount Token
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="SAVE10-XXXXXX"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    className="min-w-0 flex-1 rounded-md border border-amber-200 bg-white px-3 py-2 text-sm outline-none focus:border-amber-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleApplyCoupon}
+                    className="rounded-md bg-amber-800 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-900"
+                  >
+                    Apply
+                  </button>
+                </div>
+                {couponMessage && (
+                  <p className="mt-2 text-xs text-amber-900">{couponMessage}</p>
+                )}
+              </div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-green-700 font-medium">
+                  <span>Token Discount</span>
+                  <span>-₹{discountAmount}</span>
+                </div>
+              )}
             </div>
 
             <div className="flex justify-between items-center text-lg font-bold text-stone-900 mb-6">
               <span>Total Amount</span>
-              <span>₹{finalAmount}</span>
+              <span>₹{payableAmount}</span>
             </div>
 
             <button
@@ -502,7 +581,7 @@ function Checkout() {
                 ? "Processing..."
                 : paymentMethod === "Cash on Delivery"
                   ? "Place Order"
-                  : "Pay ₹" + finalAmount}
+                  : "Pay ₹" + payableAmount}
             </button>
 
             <div className="mt-4 flex items-center justify-center gap-2 text-xs text-stone-400">

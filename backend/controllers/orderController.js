@@ -1,6 +1,7 @@
 const Order = require("../models/Order");
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
+const Coupon = require("../models/Coupon");
 
 const Razorpay = require("razorpay");
 const restoreOrderStock = async (order) => {
@@ -9,6 +10,57 @@ const restoreOrderStock = async (order) => {
       $inc: { stock: item.quantity },
     });
   }
+};
+
+const generateCouponCode = () => {
+  const randomText = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `SAVE10-${randomText}`;
+};
+
+const createRewardCoupon = async (buyer, subTotal) => {
+  if (subTotal <= 500) {
+    return null;
+  }
+
+  return Coupon.create({
+    userId: buyer,
+    code: generateCouponCode(),
+    discountPercent: 10,
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+  });
+};
+
+const applyCouponToAmount = async ({ couponId, buyer, totalAmount }) => {
+  if (!couponId) {
+    return {
+      finalAmount: totalAmount,
+      discountAmount: 0,
+      coupon: null,
+    };
+  }
+
+  const coupon = await Coupon.findOne({
+    _id: couponId,
+    userId: buyer,
+    isUsed: false,
+    expiresAt: { $gt: new Date() },
+  });
+
+  if (!coupon) {
+    const error = new Error("Invalid, expired, or already used discount token");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const discountAmount = Math.round(
+    (totalAmount * coupon.discountPercent) / 100,
+  );
+
+  return {
+    finalAmount: totalAmount - discountAmount,
+    discountAmount,
+    coupon,
+  };
 };
 
 
@@ -102,7 +154,7 @@ const cancelOrder = async (req, res) => {
 };
 const placeOrder = async (req, res) => {
   try {
-    const { buyer } = req.body;
+    const { buyer, couponId } = req.body;
 
     if (!buyer) {
       return res.status(400).json({ message: "Buyer is required" });
@@ -125,24 +177,40 @@ const placeOrder = async (req, res) => {
       return total + item.product.price * item.quantity;
     }, 0);
     const deliveryCharge = subTotal > 400 ? 50 : 0;
-    const totalAmount = subTotal + deliveryCharge;
+    const originalAmount = subTotal + deliveryCharge;
+    const couponResult = await applyCouponToAmount({
+      couponId,
+      buyer,
+      totalAmount: originalAmount,
+    });
 
     const order = await Order.create({
       buyer,
       items: orderItems,
-      totalAmount,
+      totalAmount: couponResult.finalAmount,
+      originalAmount,
+      discountAmount: couponResult.discountAmount,
+      coupon: couponResult.coupon?._id,
       deliveryCharge,
       paymentMethod: "Cash on Delivery",
     });
+
+    if (couponResult.coupon) {
+      couponResult.coupon.isUsed = true;
+      await couponResult.coupon.save();
+    }
+
+    const rewardCoupon = await createRewardCoupon(buyer, subTotal);
 
     await Cart.deleteMany({ buyer });
 
     return res.status(201).json({
       message: "Order placed successfully",
       order,
+      rewardCoupon,
     });
   } catch (error) {
-    return res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       message: "Failed to place order",
       error: error.message,
     });
@@ -272,7 +340,7 @@ const updateOrderStatus = async (req, res) => {
 
 const buyNow = async (req, res) => {
   try {
-    const { buyer, productId, quantity, shippingAddress, paymentMethod } =
+    const { buyer, productId, quantity, shippingAddress, paymentMethod, couponId } =
       req.body;
 
     if (!buyer || !productId) {
@@ -299,7 +367,12 @@ const buyNow = async (req, res) => {
 
     const subTotal = product.price * orderQuantity;
     const deliveryCharge = subTotal > 400 ? 50 : 0;
-    const totalAmount = subTotal + deliveryCharge;
+    const originalAmount = subTotal + deliveryCharge;
+    const couponResult = await applyCouponToAmount({
+      couponId,
+      buyer,
+      totalAmount: originalAmount,
+    });
 
     const order = await Order.create({
       buyer,
@@ -311,7 +384,10 @@ const buyNow = async (req, res) => {
           price: product.price,
         },
       ],
-      totalAmount,
+      totalAmount: couponResult.finalAmount,
+      originalAmount,
+      discountAmount: couponResult.discountAmount,
+      coupon: couponResult.coupon?._id,
       deliveryCharge,
       paymentMethod,
       shippingAddress,
@@ -320,12 +396,20 @@ const buyNow = async (req, res) => {
     product.stock -= orderQuantity;
     await product.save();
 
+    if (couponResult.coupon) {
+      couponResult.coupon.isUsed = true;
+      await couponResult.coupon.save();
+    }
+
+    const rewardCoupon = await createRewardCoupon(buyer, subTotal);
+
     return res.status(201).json({
       message: "Order placed successfully",
       order,
+      rewardCoupon,
     });
   } catch (error) {
-    return res.status(500).json({
+    return res.status(error.statusCode || 500).json({
       message: "Failed to place order",
       error: error.message,
     });

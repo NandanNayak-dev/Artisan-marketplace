@@ -101,6 +101,14 @@ function Navbar({ title, user }) {
               </div>
 
               <div className="p-3">
+                <Link
+                  to="/my-rewards"
+                  onClick={() => setOpen(false)}
+                  className="mb-2 flex w-full items-center justify-center gap-2 rounded-xl border border-amber-100 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-900 transition-all duration-300 hover:bg-amber-100"
+                >
+                  My Rewards
+                </Link>
+
                 <button
                   onClick={handleLogout}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:bg-amber-900 hover:shadow-md"
