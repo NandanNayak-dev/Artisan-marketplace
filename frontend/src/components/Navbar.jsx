@@ -109,6 +109,26 @@ function Navbar({ title, user }) {
                   My Rewards
                 </Link>
 
+                {user?.role === "buyer" && (
+                  <Link
+                    to="/buyer/stats"
+                    onClick={() => setOpen(false)}
+                    className="mb-2 flex w-full items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-800 transition-all duration-300 hover:bg-stone-50"
+                  >
+                    Buyer Stats
+                  </Link>
+                )}
+
+                {user?.role === "seller" && (
+                  <Link
+                    to="/seller/stats"
+                    onClick={() => setOpen(false)}
+                    className="mb-2 flex w-full items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-4 py-2.5 text-sm font-semibold text-stone-800 transition-all duration-300 hover:bg-stone-50"
+                  >
+                    Seller Stats
+                  </Link>
+                )}
+
                 <button
                   onClick={handleLogout}
                   className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-800 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-300 hover:bg-amber-900 hover:shadow-md"

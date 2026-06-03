@@ -256,6 +256,13 @@ function BuyerDashboard() {
                     </button>
 
                     <button
+                      onClick={() => navigate("/buyer/stats")}
+                      className="w-full text-left px-4 py-3 text-sm text-stone-700 hover:bg-stone-50"
+                    >
+                      Buyer Stats
+                    </button>
+
+                    <button
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50"
                     >
