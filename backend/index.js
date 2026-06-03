@@ -8,6 +8,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const couponRoutes = require("./routes/couponRoutes");
+const analyticsRoutes = require("./routes/analyticsRoutes");
 const mongoose = require('mongoose');
 const express = require('express');
 const cors = require('cors');
@@ -32,11 +33,11 @@ app.use("/api/payments", paymentRoutes);
 app.use('/api/cart', cartRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/coupons", couponRoutes);
-
+app.use("/api/analytics", analyticsRoutes);
 // Connect to MongoDB-----------------
 mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log('Connected to MongoDB'))
-//---------------------------------------------------------------------
+//----------------------------------------------------------------------
 
 
 
