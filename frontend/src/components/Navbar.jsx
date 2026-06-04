@@ -5,7 +5,7 @@ import axios from "axios";
 function Navbar({ title, user }) {
   const [open, setOpen] = useState(false);
 
-  const firstLetter = user?.fullName?.charAt(0).toUpperCase() || "U";
+  const firstLetter = (user?.fullName?.charAt(0) || "U").toUpperCase();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -15,7 +15,7 @@ function Navbar({ title, user }) {
         {},
         {
           withCredentials: true,
-        }
+        },
       );
 
       navigate("/signin");

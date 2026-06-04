@@ -67,10 +67,7 @@ function AddProduct() {
       return;
     }
 
-    if (!behindTheScenesVideo) {
-      alert("Please select a behind the scenes video");
-      return;
-    }
+    // behind-the-scenes video is optional
 
     try {
       setIsSubmitting(true);
@@ -85,7 +82,8 @@ function AddProduct() {
       data.append("originPlace", formData.originPlace);
       data.append("originState", formData.originState);
       data.append("image", image);
-      data.append("behindTheScenesVideo", behindTheScenesVideo);
+      if (behindTheScenesVideo)
+        data.append("behindTheScenesVideo", behindTheScenesVideo);
 
       await axios.post("http://localhost:8000/api/products", data, {
         withCredentials: true,
@@ -118,7 +116,8 @@ function AddProduct() {
             Add New Product
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-stone-600 sm:text-base">
-            Create a polished listing for your handmade product with clear details, pricing, and imagery.
+            Create a polished listing for your handmade product with clear
+            details, pricing, and imagery.
           </p>
         </div>
 
@@ -135,7 +134,8 @@ function AddProduct() {
                   Present your craft beautifully
                 </h2>
                 <p className="mt-4 text-sm leading-6 text-stone-300">
-                  A strong product listing helps buyers trust your work, understand the value, and complete purchases faster.
+                  A strong product listing helps buyers trust your work,
+                  understand the value, and complete purchases faster.
                 </p>
 
                 <div className="mt-8 space-y-4">
@@ -144,7 +144,8 @@ function AddProduct() {
                       Clear product title
                     </p>
                     <p className="mt-1 text-sm leading-6 text-stone-300">
-                      Use a simple, descriptive name that tells buyers exactly what the item is.
+                      Use a simple, descriptive name that tells buyers exactly
+                      what the item is.
                     </p>
                   </div>
 
@@ -153,7 +154,8 @@ function AddProduct() {
                       Good image and video
                     </p>
                     <p className="mt-1 text-sm leading-6 text-stone-300">
-                      Upload a bright image and a short making video so buyers can see the effort behind the price.
+                      Upload a bright image and a short making video so buyers
+                      can see the effort behind the price.
                     </p>
                   </div>
 
@@ -162,7 +164,8 @@ function AddProduct() {
                       Honest description
                     </p>
                     <p className="mt-1 text-sm leading-6 text-stone-300">
-                      Mention material, use case, and any special craftsmanship details buyers should know.
+                      Mention material, use case, and any special craftsmanship
+                      details buyers should know.
                     </p>
                   </div>
                 </div>
@@ -304,7 +307,8 @@ function AddProduct() {
                       required
                     />
                     <p className="mt-3 text-xs leading-5 text-stone-500">
-                      Upload a clear JPG, PNG, or WebP image that showcases your product well.
+                      Upload a clear JPG, PNG, or WebP image that showcases your
+                      product well.
                     </p>
                   </div>
                 </div>
@@ -317,13 +321,14 @@ function AddProduct() {
                     <input
                       type="file"
                       name="behindTheScenesVideo"
+                      id="behindTheScenesVideo"
                       accept="video/*"
                       onChange={handleVideoChange}
                       className="block w-full text-sm text-stone-600 file:mr-4 file:rounded-lg file:border-0 file:bg-amber-700 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-amber-800"
-                      required
                     />
                     <p className="mt-3 text-xs leading-5 text-stone-500">
-                      Upload a short video showing how the product was made. This helps buyers understand the craftsmanship and value.
+                      Upload a short video showing how the product was made.
+                      This helps buyers understand the craftsmanship and value.
                     </p>
                   </div>
                 </div>

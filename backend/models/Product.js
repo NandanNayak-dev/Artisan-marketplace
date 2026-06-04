@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const productSchema = new mongoose.Schema(
   {
@@ -34,7 +34,8 @@ const productSchema = new mongoose.Schema(
 
     behindTheScenesVideo: {
       type: String,
-      required: true,
+      required: false,
+      default: "",
     },
 
     originPlace: {
@@ -53,7 +54,7 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Product", productSchema);

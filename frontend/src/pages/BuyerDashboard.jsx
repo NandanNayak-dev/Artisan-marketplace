@@ -18,31 +18,8 @@ function BuyerDashboard() {
   // Extract unique categories from products
   const categories = ["All", ...new Set(products.map((p) => p.category))];
 
-  // Filter products based on search and category
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "All" || product.category === selectedCategory;
-    const matchesMinPrice =
-      minPrice === "" || Number(product.price) >= Number(minPrice);
-    const matchesMaxPrice =
-      maxPrice === "" || Number(product.price) <= Number(maxPrice);
-
-    return matchesSearch && matchesCategory && matchesMinPrice && matchesMaxPrice;
-  }).sort((a, b) => {
-    switch (sortOption) {
-      case "price-low":
-        return Number(a.price) - Number(b.price);
-      case "price-high":
-        return Number(b.price) - Number(a.price);
-      case "latest":
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      default:
-        return 0;
-    }
-  });
+  // Server returns filtered products, use them directly
+  const filteredProducts = products;
 
   useEffect(() => {
     const checkUser = async () => {
@@ -60,7 +37,7 @@ function BuyerDashboard() {
           `http://localhost:8000/api/cart/${res.data.user.id}`,
           {
             withCredentials: true,
-          }
+          },
         );
 
         const itemCount = cartRes.data.cartItems.reduce((total, item) => {
@@ -74,8 +51,23 @@ function BuyerDashboard() {
     };
     const fetchProducts = async () => {
       try {
-        const res = await axios.get("http://localhost:8000/api/products");
-        setProducts(res.data.products);
+        const params = {
+          q: searchQuery || undefined,
+          category:
+            selectedCategory && selectedCategory !== "All"
+              ? selectedCategory
+              : undefined,
+          minPrice: minPrice || undefined,
+          maxPrice: maxPrice || undefined,
+          sort: sortOption || undefined,
+          page: 1,
+          limit: 100,
+        };
+
+        const res = await axios.get("http://localhost:8000/api/products", {
+          params,
+        });
+        setProducts(res.data.products || []);
       } catch (error) {
         console.error("Failed to fetch products:", error);
       }
@@ -83,7 +75,7 @@ function BuyerDashboard() {
 
     checkUser();
     fetchProducts();
-  }, [navigate]);
+  }, [navigate, searchQuery, selectedCategory, minPrice, maxPrice, sortOption]);
 
   const handleLogout = async () => {
     try {
@@ -101,7 +93,7 @@ function BuyerDashboard() {
     }
   };
 
-  const firstLetter = user?.fullName?.charAt(0).toUpperCase() || "U";
+  const firstLetter = (user?.fullName?.charAt(0) || "U").toUpperCase();
 
   const handleAddToCart = async (productId) => {
     try {
@@ -119,7 +111,7 @@ function BuyerDashboard() {
         },
         {
           withCredentials: true,
-        }
+        },
       );
 
       setCartCount((prevCount) => prevCount + 1);

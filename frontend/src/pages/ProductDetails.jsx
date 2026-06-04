@@ -8,6 +8,7 @@ function ProductDetails() {
   const navigate = useNavigate();
 
   const [product, setProduct] = useState(null);
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showBehindScenes, setShowBehindScenes] = useState(false);
@@ -340,7 +341,7 @@ function ProductDetails() {
                 <div className="bg-stone-50 border border-stone-200 rounded-lg p-4 mb-8">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-stone-200 rounded-full flex items-center justify-center text-stone-600 font-bold text-lg">
-                      {product.seller?.fullName.charAt(0)}
+                      {product.seller?.fullName?.charAt(0) || "A"}
                     </div>
                     <div>
                       <p className="text-xs text-stone-500">Sold by</p>
