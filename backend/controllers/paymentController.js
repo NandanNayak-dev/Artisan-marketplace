@@ -3,6 +3,7 @@ const Razorpay = require("razorpay");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
 const Coupon = require("../models/Coupon");
+const { requireObjectId } = require("../utils/objectId");
 
 const getRazorpayInstance = () => {
   if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
@@ -70,6 +71,14 @@ const createRazorpayOrder = async (req, res) => {
   try {
     const { productId, quantity, buyer, couponId } = req.body;
 
+    if (!buyer || !productId) {
+      return res.status(400).json({ message: "Buyer and product are required" });
+    }
+
+    if (!requireObjectId(res, buyer, "buyer id")) return;
+    if (!requireObjectId(res, productId, "product id")) return;
+    if (couponId && !requireObjectId(res, couponId, "coupon id")) return;
+
     const product = await Product.findById(productId);
 
     if (!product) {
@@ -133,6 +142,14 @@ const verifyPaymentAndCreateOrder = async (req, res) => {
       razorpay_payment_id,
       razorpay_signature,
     } = req.body;
+
+    if (!buyer || !productId) {
+      return res.status(400).json({ message: "Buyer and product are required" });
+    }
+
+    if (!requireObjectId(res, buyer, "buyer id")) return;
+    if (!requireObjectId(res, productId, "product id")) return;
+    if (couponId && !requireObjectId(res, couponId, "coupon id")) return;
 
     const body = `${razorpay_order_id}|${razorpay_payment_id}`;
 

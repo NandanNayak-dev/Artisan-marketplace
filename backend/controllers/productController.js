@@ -1,5 +1,6 @@
 const Product = require("../models/Product");
 const cloudinary = require("../config/cloudinary");
+const { requireObjectId } = require("../utils/objectId");
 const createProduct = async (req, res) => {
   try {
     const { name, description, price, category, stock, seller, originPlace, originState } =
@@ -14,6 +15,8 @@ const createProduct = async (req, res) => {
     ) {
       return res.status(400).json({ message: "All fields are required" });
     }
+
+    if (!requireObjectId(res, seller, "seller id")) return;
 
     const imageFile = req.files?.image?.[0];
     const videoFile = req.files?.behindTheScenesVideo?.[0];
@@ -59,7 +62,6 @@ const getAllProducts = async (req, res) => {
     const products = await Product.find()
       .populate("seller", "fullName email")
       .sort({ createdAt: -1 });
-      console.log(products);
     return res.status(200).json({
       products,
     });
@@ -72,6 +74,8 @@ const getAllProducts = async (req, res) => {
 const deleteProduct = async (req, res) => {
   try{
     const { id } = req.params;
+    if (!requireObjectId(res, id, "product id")) return;
+
     const product = await Product.findByIdAndDelete(id);
     if(!product){
       return res.status(404).json({ message: "Product not found" });
@@ -86,6 +90,8 @@ const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, price, category, stock, originPlace, originState } = req.body;
+
+    if (!requireObjectId(res, id, "product id")) return;
 
     const updateData = {};
 
@@ -141,8 +147,9 @@ const updateProduct = async (req, res) => {
 const getProductById = async (req, res) => {
   try{
     const { id } = req.params;
+    if (!requireObjectId(res, id, "product id")) return;
+
     const product = await Product.findById(id).populate("seller", "fullName email");
-    console.log(product)
     if(!product){
       return res.status(404).json({ message: "Product not found" });
     }

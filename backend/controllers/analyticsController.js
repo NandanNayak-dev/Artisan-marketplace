@@ -1,9 +1,12 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
+const { requireObjectId } = require("../utils/objectId");
 
 const getSellerAnalytics = async (req, res) => {
   try {
     const { sellerId } = req.params;
+
+    if (!requireObjectId(res, sellerId, "seller id")) return;
 
     const sellerOrders = await Order.find({ "items.seller": sellerId })
       .populate("items.product")
@@ -109,6 +112,8 @@ const getSellerAnalytics = async (req, res) => {
 const getBuyerAnalytics = async (req, res) => {
   try {
     const { buyerId } = req.params;
+
+    if (!requireObjectId(res, buyerId, "buyer id")) return;
 
     const orders = await Order.find({ buyer: buyerId })
       .populate("items.product")

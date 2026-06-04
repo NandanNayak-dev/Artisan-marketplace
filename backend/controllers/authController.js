@@ -80,7 +80,6 @@ const signIn = async (req, res) => {
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
-    console.log("User found:", user);
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
@@ -122,6 +121,10 @@ const signIn = async (req, res) => {
 const firebaseGoogleAuth = async (req, res) => {
   try {
     const { idToken, role } = req.body;
+
+    if (!admin.apps.length) {
+      return res.status(503).json({ message: "Google authentication is not configured" });
+    }
 
     if (!idToken) {
       return res.status(400).json({ message: "Firebase token is required" });
@@ -193,6 +196,10 @@ const firebaseGoogleAuth = async (req, res) => {
 const firebaseGoogleSignIn = async (req, res) => {
   try {
     const { idToken } = req.body;
+
+    if (!admin.apps.length) {
+      return res.status(503).json({ message: "Google authentication is not configured" });
+    }
 
     if (!idToken) {
       return res.status(400).json({ message: "Firebase token is required" });

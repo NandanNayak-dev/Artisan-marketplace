@@ -1,6 +1,4 @@
 require('dotenv').config();
-const bcrypt = require('bcryptjs');
-const User = require('./models/User');
 const authRoutes = require('./routes/authRoutes');
 const productRoutes = require('./routes/productRoutes');
 const cartRoutes = require('./routes/cartRoutes');
@@ -18,12 +16,20 @@ const cookieParser = require("cookie-parser");
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 // Allow requests from your frontend dev server (Vite default port 5173)
 app.use(cors({
   origin: 'http://localhost:5173',
   credentials: true,
 }));
+
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    database:
+      mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+  });
+});
 
 //Routes--------------------------------
 app.use('/api/auth', authRoutes);
@@ -35,8 +41,17 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/analytics", analyticsRoutes);
 // Connect to MongoDB-----------------
+if (!process.env.MONGO_URL) {
+  console.error("MONGO_URL is missing in .env");
+  process.exit(1);
+}
+
 mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log('Connected to MongoDB'))
+  .catch((error) => {
+    console.error("MongoDB connection failed:", error.message);
+    process.exit(1);
+  });
 //----------------------------------------------------------------------
 
 

@@ -2,6 +2,7 @@ const Order = require("../models/Order");
 const Cart = require("../models/Cart");
 const Product = require("../models/Product");
 const Coupon = require("../models/Coupon");
+const { requireObjectId } = require("../utils/objectId");
 
 const Razorpay = require("razorpay");
 const restoreOrderStock = async (order) => {
@@ -79,6 +80,8 @@ const cancelOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
     const { reason } = req.body;
+
+    if (!requireObjectId(res, orderId, "order id")) return;
 
     const order = await Order.findById(orderId);
 
@@ -160,6 +163,9 @@ const placeOrder = async (req, res) => {
       return res.status(400).json({ message: "Buyer is required" });
     }
 
+    if (!requireObjectId(res, buyer, "buyer id")) return;
+    if (couponId && !requireObjectId(res, couponId, "coupon id")) return;
+
     const cartItems = await Cart.find({ buyer }).populate("product");
 
     if (cartItems.length === 0) {
@@ -221,6 +227,8 @@ const getBuyerOrders = async (req, res) => {
   try {
     const { buyerId } = req.params;
 
+    if (!requireObjectId(res, buyerId, "buyer id")) return;
+
     const orders = await Order.find({ buyer: buyerId })
       .populate("items.product")
       .sort({ createdAt: -1 });
@@ -254,6 +262,8 @@ const getSellerOrders = async (req, res) => {
   try {
     const { sellerId } = req.params;
 
+    if (!requireObjectId(res, sellerId, "seller id")) return;
+
     const orders = await Order.find({ "items.seller": sellerId })
       .populate("buyer", "fullName email")
       .populate("items.product")
@@ -272,6 +282,8 @@ const updateOrderStatus = async (req, res) => {
   try {
     const { orderId } = req.params;
     const { status } = req.body;
+
+    if (!requireObjectId(res, orderId, "order id")) return;
 
     const allowedStatuses = [
       "pending",
@@ -348,6 +360,10 @@ const buyNow = async (req, res) => {
         message: "Buyer and product are required",
       });
     }
+
+    if (!requireObjectId(res, buyer, "buyer id")) return;
+    if (!requireObjectId(res, productId, "product id")) return;
+    if (couponId && !requireObjectId(res, couponId, "coupon id")) return;
 
     const product = await Product.findById(productId);
 

@@ -1,4 +1,5 @@
 const Cart = require("../models/Cart");
+const { requireObjectId } = require("../utils/objectId");
 
 const addToCart = async (req, res) => {
   try {
@@ -8,6 +9,9 @@ const addToCart = async (req, res) => {
         .status(400)
         .json({ message: "Buyer and product are required" });
     }
+
+    if (!requireObjectId(res, buyer, "buyer id")) return;
+    if (!requireObjectId(res, product, "product id")) return;
 
     const existingCartItem = await Cart.findOne({ buyer, product });
 
@@ -38,6 +42,8 @@ const addToCart = async (req, res) => {
 const getCartItems = async (req, res) => {
   try {
     const { buyerId } = req.params;
+
+    if (!requireObjectId(res, buyerId, "buyer id")) return;
 
     const cartItems = await Cart.find({ buyer: buyerId })
       .populate("product");
