@@ -122,7 +122,9 @@ function Checkout() {
     } catch (error) {
       setCouponId(null);
       setDiscountAmount(0);
-      setCouponMessage(error.response?.data?.message || "Failed to apply token");
+      setCouponMessage(
+        error.response?.data?.message || "Failed to apply token",
+      );
     }
   };
 
@@ -187,7 +189,6 @@ function Checkout() {
         {
           productId: product._id,
           quantity,
-          buyer: user.id,
           couponId,
         },
         { withCredentials: true },
@@ -217,7 +218,6 @@ function Checkout() {
           const verifyRes = await axios.post(
             `${API_URL}/payments/verify`,
             {
-              buyer: user.id,
               productId: product._id,
               quantity,
               shippingAddress: address,

@@ -15,6 +15,13 @@ function ProductDetails() {
   const [popularItems, setPopularItems] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
 
+  const [reviews, setReviews] = useState([]);
+  const [eligible, setEligible] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
+  const [userRating, setUserRating] = useState(5);
+  const [userComment, setUserComment] = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
+
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
@@ -29,6 +36,27 @@ function ProductDetails() {
         );
 
         setProduct(productRes.data.product);
+        setReviews(productRes.data.reviews || []);
+
+        if (userRes.data.user && userRes.data.user.role === "buyer") {
+          try {
+            const eligibilityRes = await axios.get(
+              `http://localhost:8000/api/reviews/check-eligibility/${id}`,
+              { withCredentials: true },
+            );
+            setEligible(eligibilityRes.data.eligible);
+            setHasReviewed(eligibilityRes.data.hasReviewed);
+            if (
+              eligibilityRes.data.hasReviewed &&
+              eligibilityRes.data.existingReview
+            ) {
+              setUserRating(eligibilityRes.data.existingReview.rating);
+              setUserComment(eligibilityRes.data.existingReview.comment || "");
+            }
+          } catch (err) {
+            console.error("Failed to check review eligibility", err);
+          }
+        }
       } catch (error) {
         console.log(error);
         alert("Failed to load product details");
@@ -144,6 +172,44 @@ function ProductDetails() {
     }
   };
 
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!user) {
+      alert("Please login first");
+      navigate("/signin");
+      return;
+    }
+    setSubmittingReview(true);
+    try {
+      await axios.post(
+        "http://localhost:8000/api/reviews",
+        {
+          productId: id,
+          rating: userRating,
+          comment: userComment,
+        },
+        {
+          withCredentials: true,
+        },
+      );
+      alert(
+        hasReviewed
+          ? "Review updated successfully!"
+          : "Review submitted successfully!",
+      );
+      const productRes = await axios.get(
+        `http://localhost:8000/api/products/${id}`,
+      );
+      setProduct(productRes.data.product);
+      setReviews(productRes.data.reviews || []);
+      setHasReviewed(true);
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to submit review");
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 pb-10">
       <Navbar title="Product Details" user={user} />
@@ -209,7 +275,11 @@ function ProductDetails() {
                     {[...Array(5)].map((_, i) => (
                       <svg
                         key={i}
-                        className={`w-4 h-4 ${i < 4 ? "text-amber-400" : "text-stone-300"}`}
+                        className={`w-4 h-4 ${
+                          i < Math.round(product.avgRating || 0)
+                            ? "text-amber-400"
+                            : "text-stone-300"
+                        }`}
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -217,8 +287,10 @@ function ProductDetails() {
                       </svg>
                     ))}
                   </div>
-                  <span className="text-sm text-stone-500 font-medium cursor-pointer hover:text-amber-700">
-                    (128 Ratings)
+                  <span className="text-sm text-stone-500 font-medium">
+                    {product.avgRating > 0
+                      ? `${product.avgRating} / 5 (${product.reviewCount} Ratings)`
+                      : "No ratings yet"}
                   </span>
                 </div>
 
@@ -388,6 +460,202 @@ function ProductDetails() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Review Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 pb-8">
+        <div className="bg-white rounded-xl shadow-sm border border-stone-200 p-6 lg:p-8">
+          <h2 className="text-2xl font-bold text-stone-800 mb-6 pb-2 border-b">
+            Customer Reviews ({reviews.length})
+          </h2>
+
+          {/* Form to leave a review */}
+          {user && user.role === "buyer" && product.seller._id !== user.id ? (
+            eligible ? (
+              <div className="mb-8 p-6 bg-stone-50 rounded-lg border border-stone-200">
+                <h3 className="text-lg font-bold text-stone-800 mb-4">
+                  {hasReviewed ? "Update Your Review" : "Write a Review"}
+                </h3>
+                <form onSubmit={handleSubmitReview} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-stone-700 mb-1">
+                      Rating
+                    </label>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map((val) => (
+                        <button
+                          key={val}
+                          type="button"
+                          onClick={() => setUserRating(val)}
+                          className="text-2xl focus:outline-none transition-transform hover:scale-110"
+                        >
+                          <span
+                            className={
+                              val <= userRating
+                                ? "text-amber-500"
+                                : "text-stone-300"
+                            }
+                          >
+                            ★
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-stone-700 mb-1">
+                      Your Experience
+                    </label>
+                    <textarea
+                      rows="4"
+                      value={userComment}
+                      onChange={(e) => setUserComment(e.target.value)}
+                      placeholder="Tell us about the craftsmanship, delivery, and look of this handmade item..."
+                      className="w-full rounded-md border border-stone-300 p-3 text-sm focus:border-amber-600 focus:outline-none"
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submittingReview}
+                    className="bg-amber-700 hover:bg-amber-800 text-white font-bold py-2.5 px-6 rounded-lg text-sm shadow transition-colors disabled:opacity-50"
+                  >
+                    {submittingReview
+                      ? "Submitting..."
+                      : hasReviewed
+                        ? "Update Review"
+                        : "Submit Review"}
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <div className="mb-8 p-6 bg-amber-50 rounded-lg border border-amber-200">
+                <div className="flex items-start gap-3">
+                  <svg
+                    className="w-6 h-6 text-amber-600 mt-0.5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <div>
+                    <h3 className="text-lg font-bold text-amber-900 mb-2">
+                      Review Eligibility
+                    </h3>
+                    <p className="text-sm text-amber-800">
+                      You can only review products that have been delivered to
+                      you. Please purchase this item and wait for delivery
+                      before writing a review.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )
+          ) : (
+            <div className="mb-8 p-6 bg-stone-50 rounded-lg border border-stone-200">
+              <div className="flex items-start gap-3">
+                <svg
+                  className="w-6 h-6 text-stone-400 mt-0.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
+                </svg>
+                <div>
+                  <h3 className="text-lg font-bold text-stone-800 mb-2">
+                    {user?.role === "seller"
+                      ? "Sellers Cannot Review"
+                      : "Sign in to Review"}
+                  </h3>
+                  <p className="text-sm text-stone-600 mb-3">
+                    {user?.role === "seller"
+                      ? "As a seller, you cannot review your own products. Only buyers who have purchased and received this item can write reviews."
+                      : "Please sign in as a buyer to write a review for this product."}
+                  </p>
+                  {user?.role !== "seller" && (
+                    <button
+                      onClick={() => navigate("/signin")}
+                      className="bg-amber-700 hover:bg-amber-800 text-white font-bold py-2 px-4 rounded-lg text-sm transition-colors"
+                    >
+                      Sign In
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* List of reviews */}
+          <div className="space-y-6">
+            {reviews.length > 0 ? (
+              reviews.map((rev) => (
+                <div
+                  key={rev._id}
+                  className="pb-6 border-b border-stone-100 last:border-0 last:pb-0"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <h4 className="font-bold text-stone-800 text-sm">
+                        {rev.buyer?.fullName || "Verified Buyer"}
+                      </h4>
+                      <div className="flex text-amber-500 text-sm mt-0.5">
+                        {[...Array(5)].map((_, i) => (
+                          <span key={i} className="mr-0.5">
+                            {i < rev.rating ? "★" : "☆"}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <span className="text-xs text-stone-400">
+                      {new Date(rev.createdAt).toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+                  <p className="text-stone-600 text-sm leading-relaxed whitespace-pre-line">
+                    {rev.comment}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-10 text-stone-400">
+                <svg
+                  className="w-12 h-12 mx-auto mb-3 text-stone-300"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                  />
+                </svg>
+                <p className="text-sm">
+                  No reviews yet for this product. Be the first to share your
+                  experience!
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

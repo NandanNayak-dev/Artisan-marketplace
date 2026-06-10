@@ -1,4 +1,5 @@
 const Product = require("../models/Product");
+const Review = require("../models/Review");
 const cloudinary = require("../config/cloudinary");
 const { requireObjectId } = require("../utils/objectId");
 
@@ -67,10 +68,75 @@ const createProduct = async (req, res) => {
 
 const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find()
+    const { q, category, minPrice, maxPrice, sort } = req.query;
+
+    const query = {};
+
+    // 1. Text Search (matches name, description, originPlace, or originState)
+    if (q && q.trim() !== "") {
+      const searchRegex = { $regex: q.trim(), $options: "i" };
+      query.$or = [
+        { name: searchRegex },
+        { description: searchRegex },
+        { originPlace: searchRegex },
+        { originState: searchRegex },
+      ];
+    }
+
+    // 2. Category Filter
+    if (category && category !== "All") {
+      query.category = category;
+    }
+
+    // 3. Price Range Filter
+    if ((minPrice !== undefined && minPrice !== "") || (maxPrice !== undefined && maxPrice !== "")) {
+      query.price = {};
+      if (minPrice !== undefined && minPrice !== "") {
+        query.price.$gte = Number(minPrice);
+      }
+      if (maxPrice !== undefined && maxPrice !== "") {
+        query.price.$lte = Number(maxPrice);
+      }
+    }
+
+    // 4. Sorting logic
+    let sortObj = { createdAt: -1 }; // Default: Latest
+    if (sort === "price-low") {
+      sortObj = { price: 1 };
+    } else if (sort === "price-high") {
+      sortObj = { price: -1 };
+    } else if (sort === "latest") {
+      sortObj = { createdAt: -1 };
+    } else if (sort === "relevance") {
+      sortObj = { createdAt: -1 };
+    }
+
+    const products = await Product.find(query)
       .populate("seller", "fullName email")
-      .sort({ createdAt: -1 });
-    return res.status(200).json({ products });
+      .sort(sortObj);
+
+    const ratings = await Review.aggregate([
+      { $group: { _id: "$product", avgRating: { $avg: "$rating" }, count: { $sum: 1 } } }
+    ]);
+
+    const ratingsMap = {};
+    ratings.forEach(r => {
+      ratingsMap[r._id.toString()] = {
+        avgRating: Number(r.avgRating.toFixed(1)),
+        count: r.count
+      };
+    });
+
+    const productsWithRatings = products.map(product => {
+      const ratingInfo = ratingsMap[product._id.toString()] || { avgRating: 0, count: 0 };
+      return {
+        ...product.toObject(),
+        avgRating: ratingInfo.avgRating,
+        reviewCount: ratingInfo.count
+      };
+    });
+
+    return res.status(200).json({ products: productsWithRatings });
   } catch (error) {
     return res
       .status(500)
@@ -172,7 +238,24 @@ const getProductById = async (req, res) => {
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-    return res.status(200).json({ product });
+
+    const reviews = await Review.find({ product: id })
+      .populate("buyer", "fullName")
+      .sort({ createdAt: -1 });
+
+    const reviewCount = reviews.length;
+    const avgRating = reviewCount > 0
+      ? Number((reviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount).toFixed(1))
+      : 0;
+
+    return res.status(200).json({
+      product: {
+        ...product.toObject(),
+        avgRating,
+        reviewCount,
+      },
+      reviews,
+    });
   } catch (error) {
     return res
       .status(500)

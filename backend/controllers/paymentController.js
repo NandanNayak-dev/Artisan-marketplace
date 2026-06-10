@@ -69,10 +69,11 @@ const applyCouponToAmount = async ({ couponId, buyer, totalAmount }) => {
 
 const createRazorpayOrder = async (req, res) => {
   try {
-    const { productId, quantity, buyer, couponId } = req.body;
+    const { productId, quantity, couponId } = req.body;
+    const buyer = req.user.id;
 
-    if (!buyer || !productId) {
-      return res.status(400).json({ message: "Buyer and product are required" });
+    if (!productId) {
+      return res.status(400).json({ message: "Product is required" });
     }
 
     if (!requireObjectId(res, buyer, "buyer id")) return;
@@ -132,7 +133,6 @@ const createRazorpayOrder = async (req, res) => {
 const verifyPaymentAndCreateOrder = async (req, res) => {
   try {
     const {
-      buyer,
       productId,
       quantity,
       shippingAddress,
@@ -142,9 +142,10 @@ const verifyPaymentAndCreateOrder = async (req, res) => {
       razorpay_payment_id,
       razorpay_signature,
     } = req.body;
+    const buyer = req.user.id;
 
-    if (!buyer || !productId) {
-      return res.status(400).json({ message: "Buyer and product are required" });
+    if (!productId) {
+      return res.status(400).json({ message: "Product is required" });
     }
 
     if (!requireObjectId(res, buyer, "buyer id")) return;

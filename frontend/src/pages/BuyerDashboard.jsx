@@ -376,13 +376,17 @@ function BuyerDashboard() {
                   </h2>
                 </div>
 
-                {/* Fake Rating for Visual Appeal */}
+                {/* Real Rating from Database */}
                 <div className="flex items-center gap-2 mt-2">
                   <div className="flex">
                     {[...Array(5)].map((_, i) => (
                       <svg
                         key={i}
-                        className={`w-3.5 h-3.5 ${i < 4 ? "text-amber-400" : "text-stone-300"}`}
+                        className={`w-3.5 h-3.5 ${
+                          i < Math.round(product.avgRating || 0)
+                            ? "text-amber-400"
+                            : "text-stone-300"
+                        }`}
                         fill="currentColor"
                         viewBox="0 0 20 20"
                       >
@@ -390,7 +394,11 @@ function BuyerDashboard() {
                       </svg>
                     ))}
                   </div>
-                  <span className="text-xs text-stone-500">(120)</span>
+                  <span className="text-xs text-stone-500">
+                    {product.avgRating > 0
+                      ? `${product.avgRating} (${product.reviewCount})`
+                      : "No ratings"}
+                  </span>
                 </div>
 
                 <div className="mt-2 flex items-center gap-2">
