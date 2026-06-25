@@ -1,10 +1,17 @@
 const getPopularHandicraftsByLocation = async (req, res) => {
   try {
     const { location } = req.body;
+    const apiKey = process.env.GEMINI_API_KEY;
 
     if (!location) {
       return res.status(400).json({
         message: "Location is required",
+      });
+    }
+
+    if (!apiKey) {
+      return res.status(500).json({
+        message: "Gemini API key is not configured",
       });
     }
 
@@ -21,23 +28,44 @@ Rules:
 - Keep each info line under 12 words.
 `;
 
-    const ollamaRes = await fetch("http://localhost:11434/api/generate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const geminiRes = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/interactions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
+        },
+        body: JSON.stringify({
+          model: process.env.GEMINI_MODEL || "gemini-3.5-flash",
+          input: prompt,
+          generation_config: {
+            temperature: 0.4,
+          },
+        }),
       },
-      body: JSON.stringify({
-        model: "llama3.2",
-        prompt,
-        stream: false,
-      }),
-    });
+    );
 
-    const data = await ollamaRes.json();
+    const data = await geminiRes.json();
+
+    if (!geminiRes.ok) {
+      return res.status(geminiRes.status).json({
+        message: "Gemini failed to generate suggestions",
+        error: data.error?.message || "Unknown Gemini API error",
+      });
+    }
+
+    const suggestion = data.output_text?.trim();
+
+    if (!suggestion) {
+      return res.status(500).json({
+        message: "Gemini returned an empty response",
+      });
+    }
 
     return res.status(200).json({
       location,
-      suggestion: data.response,
+      suggestion,
     });
   } catch (error) {
     return res.status(500).json({

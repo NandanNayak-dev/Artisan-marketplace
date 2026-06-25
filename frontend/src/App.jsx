@@ -15,6 +15,7 @@ import SellerOrders from "./pages/SellerOrders";
 import MyRewards from "./pages/MyRewards";
 import BuyerStats from "./pages/BuyerStats";
 import SellerStats from "./pages/SellerStats";
+import MyWishlist from "./pages/MyWishlist";
 
 function App() {
   return (
@@ -34,6 +35,7 @@ function App() {
       <Route path="/seller/orders" element={<SellerOrders />} />
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/my-rewards" element={<MyRewards />} />
+      <Route path="/my-wishlist" element={<MyWishlist />} />
       <Route path="/buyer/stats" element={<BuyerStats />} />
       <Route path="/seller/stats" element={<SellerStats />} />
     </Routes>
@@ -41,3 +43,4 @@ function App() {
 }
 
 export default App;
+

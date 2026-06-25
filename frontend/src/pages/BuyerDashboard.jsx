@@ -22,6 +22,7 @@ function BuyerDashboard() {
   const [allCategories, setAllCategories] = useState([]);
   const [profileOpen, setProfileOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [wishlistProductIds, setWishlistProductIds] = useState([]);
 
   const categories = ["All", ...allCategories];
 
@@ -52,6 +53,12 @@ function BuyerDashboard() {
         }, 0);
 
         setCartCount(itemCount);
+
+        const wishlistRes = await axios.get(
+          "http://localhost:8000/api/wishlist/ids",
+          { withCredentials: true },
+        );
+        setWishlistProductIds(wishlistRes.data.productIds || []);
       } catch (error) {
         navigate("/signin");
       }
@@ -124,6 +131,30 @@ function BuyerDashboard() {
   };
 
   const firstLetter = (user?.fullName?.charAt(0) || "U").toUpperCase();
+
+  const handleToggleWishlist = async (productId) => {
+    try {
+      const isSaved = wishlistProductIds.includes(productId);
+
+      if (isSaved) {
+        await axios.delete(`http://localhost:8000/api/wishlist/${productId}`, {
+          withCredentials: true,
+        });
+        setWishlistProductIds((currentIds) =>
+          currentIds.filter((id) => id !== productId),
+        );
+      } else {
+        await axios.post(
+          "http://localhost:8000/api/wishlist",
+          { productId },
+          { withCredentials: true },
+        );
+        setWishlistProductIds((currentIds) => [...currentIds, productId]);
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to update wishlist");
+    }
+  };
 
   const handleAddToCart = async (productId) => {
     try {
@@ -278,6 +309,12 @@ function BuyerDashboard() {
                     </button>
 
                     <button
+                      onClick={() => navigate("/my-wishlist")}
+                      className="w-full text-left px-4 py-3 text-sm text-stone-700 hover:bg-stone-50"
+                    >
+                      My Wishlist
+                    </button>
+                    <button
                       onClick={() => navigate("/buyer/stats")}
                       className="w-full text-left px-4 py-3 text-sm text-stone-700 hover:bg-stone-50"
                     >
@@ -429,6 +466,42 @@ function BuyerDashboard() {
                 <div className="absolute top-2 left-2 bg-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-sm">
                   HANDMADE
                 </div>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    handleToggleWishlist(product._id);
+                  }}
+                  className={`absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full border shadow-sm transition-colors ${
+                    wishlistProductIds.includes(product._id)
+                      ? "border-red-200 bg-red-50 text-red-600"
+                      : "border-stone-200 bg-white text-stone-500 hover:text-red-600"
+                  }`}
+                  aria-label={
+                    wishlistProductIds.includes(product._id)
+                      ? "Remove from wishlist"
+                      : "Save to wishlist"
+                  }
+                  title={
+                    wishlistProductIds.includes(product._id)
+                      ? "Remove from wishlist"
+                      : "Save to wishlist"
+                  }
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill={
+                      wishlistProductIds.includes(product._id)
+                        ? "currentColor"
+                        : "none"
+                    }
+                    stroke="currentColor"
+                  >
+                    <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+                  </svg>
+                </button>
               </div>
 
               {/* Content */}
@@ -555,4 +628,8 @@ function BuyerDashboard() {
 }
 
 export default BuyerDashboard;
+
+
+
+
 

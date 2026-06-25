@@ -8,6 +8,7 @@ const aiRoutes = require("./routes/aiRoutes");
 const couponRoutes = require("./routes/couponRoutes");
 const analyticsRoutes = require("./routes/analyticsRoutes");
 const reviewRoutes = require("./routes/reviewRoutes");
+const wishlistRoutes = require("./routes/wishlistRoutes");
 const mongoose = require("mongoose");
 const express = require("express");
 const cors = require("cors");
@@ -43,6 +44,7 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/coupons", couponRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/wishlist", wishlistRoutes);
 // Connect to MongoDB-----------------
 if (!process.env.MONGO_URL) {
   console.error("MONGO_URL is missing in .env");
@@ -61,3 +63,4 @@ mongoose
 app.listen(PORT, () => {
   console.log(`Server listening on http://localhost:${PORT}`);
 });
+
