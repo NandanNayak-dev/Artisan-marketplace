@@ -1,22 +1,29 @@
 import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 
 function BuyerDashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] = useState(
+    location.state?.filter || "All",
+  );
   const [sortOption, setSortOption] = useState("relevance");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [originPlace, setOriginPlace] = useState("");
+  const [originState, setOriginState] = useState("");
+  const [minRating, setMinRating] = useState("");
+  const [stockStatus, setStockStatus] = useState("all");
+  const [allCategories, setAllCategories] = useState([]);
   const [profileOpen, setProfileOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
 
-  // Extract unique categories from products
-  const categories = ["All", ...new Set(products.map((p) => p.category))];
+  const categories = ["All", ...allCategories];
 
   // Server returns filtered products, use them directly
   const filteredProducts = products;
@@ -59,6 +66,10 @@ function BuyerDashboard() {
               : undefined,
           minPrice: minPrice || undefined,
           maxPrice: maxPrice || undefined,
+          originPlace: originPlace || undefined,
+          originState: originState || undefined,
+          minRating: minRating || undefined,
+          stockStatus: stockStatus !== "all" ? stockStatus : undefined,
           sort: sortOption || undefined,
           page: 1,
           limit: 100,
@@ -67,7 +78,15 @@ function BuyerDashboard() {
         const res = await axios.get("http://localhost:8000/api/products", {
           params,
         });
-        setProducts(res.data.products || []);
+        const fetchedProducts = res.data.products || [];
+        setProducts(fetchedProducts);
+        setAllCategories((prevCategories) => {
+          const mergedCategories = new Set(prevCategories);
+          fetchedProducts.forEach((product) => {
+            if (product.category) mergedCategories.add(product.category);
+          });
+          return [...mergedCategories].sort();
+        });
       } catch (error) {
         console.error("Failed to fetch products:", error);
       }
@@ -75,7 +94,18 @@ function BuyerDashboard() {
 
     checkUser();
     fetchProducts();
-  }, [navigate, searchQuery, selectedCategory, minPrice, maxPrice, sortOption]);
+  }, [
+    navigate,
+    searchQuery,
+    selectedCategory,
+    minPrice,
+    maxPrice,
+    originPlace,
+    originState,
+    minRating,
+    stockStatus,
+    sortOption,
+  ]);
 
   const handleLogout = async () => {
     try {
@@ -311,9 +341,10 @@ function BuyerDashboard() {
           </div>
         </div>
 
-        <div className="mb-6 grid grid-cols-1 gap-3 rounded-lg border border-stone-200 bg-white p-4 sm:grid-cols-[1fr_1fr_auto]">
+        <div className="mb-6 grid grid-cols-1 gap-3 rounded-lg border border-stone-200 bg-white p-4 sm:grid-cols-2 lg:grid-cols-7">
           <input
             type="number"
+            min="0"
             placeholder="Min price"
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
@@ -321,11 +352,46 @@ function BuyerDashboard() {
           />
           <input
             type="number"
+            min="0"
             placeholder="Max price"
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
             className="rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600"
           />
+          <input
+            type="text"
+            placeholder="Origin place"
+            value={originPlace}
+            onChange={(e) => setOriginPlace(e.target.value)}
+            className="rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600"
+          />
+          <input
+            type="text"
+            placeholder="Origin state"
+            value={originState}
+            onChange={(e) => setOriginState(e.target.value)}
+            className="rounded-md border border-stone-300 px-3 py-2 text-sm outline-none focus:border-amber-600"
+          />
+          <select
+            value={minRating}
+            onChange={(e) => setMinRating(e.target.value)}
+            className="rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700 outline-none focus:border-amber-600"
+          >
+            <option value="">Any rating</option>
+            <option value="4">4 stars & up</option>
+            <option value="3">3 stars & up</option>
+            <option value="2">2 stars & up</option>
+            <option value="1">1 star & up</option>
+          </select>
+          <select
+            value={stockStatus}
+            onChange={(e) => setStockStatus(e.target.value)}
+            className="rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-700 outline-none focus:border-amber-600"
+          >
+            <option value="all">Any stock</option>
+            <option value="in-stock">In stock</option>
+            <option value="out-of-stock">Out of stock</option>
+          </select>
           <button
             onClick={() => {
               setSearchQuery("");
@@ -333,13 +399,16 @@ function BuyerDashboard() {
               setSortOption("relevance");
               setMinPrice("");
               setMaxPrice("");
+              setOriginPlace("");
+              setOriginState("");
+              setMinRating("");
+              setStockStatus("all");
             }}
             className="rounded-md border border-stone-300 px-4 py-2 text-sm font-bold text-stone-700 hover:bg-stone-50"
           >
             Reset Filters
           </button>
         </div>
-
         {/* Product Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredProducts.map((product) => (
@@ -486,3 +555,4 @@ function BuyerDashboard() {
 }
 
 export default BuyerDashboard;
+

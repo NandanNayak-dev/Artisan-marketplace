@@ -68,7 +68,17 @@ const createProduct = async (req, res) => {
 
 const getAllProducts = async (req, res) => {
   try {
-    const { q, category, minPrice, maxPrice, sort } = req.query;
+    const {
+      q,
+      category,
+      minPrice,
+      maxPrice,
+      originPlace,
+      originState,
+      minRating,
+      stockStatus,
+      sort,
+    } = req.query;
 
     const query = {};
 
@@ -77,6 +87,7 @@ const getAllProducts = async (req, res) => {
       const searchRegex = { $regex: q.trim(), $options: "i" };
       query.$or = [
         { name: searchRegex },
+        { category: searchRegex },
         { description: searchRegex },
         { originPlace: searchRegex },
         { originState: searchRegex },
@@ -88,6 +99,14 @@ const getAllProducts = async (req, res) => {
       query.category = category;
     }
 
+    if (originPlace && originPlace.trim() !== "") {
+      query.originPlace = { $regex: originPlace.trim(), $options: "i" };
+    }
+
+    if (originState && originState.trim() !== "") {
+      query.originState = { $regex: originState.trim(), $options: "i" };
+    }
+
     // 3. Price Range Filter
     if ((minPrice !== undefined && minPrice !== "") || (maxPrice !== undefined && maxPrice !== "")) {
       query.price = {};
@@ -97,6 +116,12 @@ const getAllProducts = async (req, res) => {
       if (maxPrice !== undefined && maxPrice !== "") {
         query.price.$lte = Number(maxPrice);
       }
+    }
+
+    if (stockStatus === "in-stock") {
+      query.stock = { $gt: 0 };
+    } else if (stockStatus === "out-of-stock") {
+      query.stock = { $lte: 0 };
     }
 
     // 4. Sorting logic
@@ -127,7 +152,7 @@ const getAllProducts = async (req, res) => {
       };
     });
 
-    const productsWithRatings = products.map(product => {
+    let productsWithRatings = products.map(product => {
       const ratingInfo = ratingsMap[product._id.toString()] || { avgRating: 0, count: 0 };
       return {
         ...product.toObject(),
@@ -135,6 +160,15 @@ const getAllProducts = async (req, res) => {
         reviewCount: ratingInfo.count
       };
     });
+
+    if (minRating !== undefined && minRating !== "") {
+      const ratingNumber = Number(minRating);
+      if (!Number.isNaN(ratingNumber)) {
+        productsWithRatings = productsWithRatings.filter(
+          (product) => product.avgRating >= ratingNumber,
+        );
+      }
+    }
 
     return res.status(200).json({ products: productsWithRatings });
   } catch (error) {
@@ -270,3 +304,4 @@ module.exports = {
   getProductById,
   updateProduct,
 };
+
